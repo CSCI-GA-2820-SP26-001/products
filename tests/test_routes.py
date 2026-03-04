@@ -15,7 +15,7 @@
 ######################################################################
 
 """
-TestYourResourceModel API Service Test Suite
+TestProduct API Service Test Suite
 """
 
 # pylint: disable=duplicate-code
@@ -24,7 +24,13 @@ import logging
 from unittest import TestCase
 from wsgi import app
 from service.common import status
-from service.models import db, YourResourceModel
+from service.models import DataValidationError, db, Product
+from service.common.error_handlers import (
+    bad_request,
+    mediatype_not_supported,
+    internal_server_error,
+    request_validation_error,
+)
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
@@ -35,7 +41,7 @@ DATABASE_URI = os.getenv(
 #  T E S T   C A S E S
 ######################################################################
 # pylint: disable=too-many-public-methods
-class TestYourResourceService(TestCase):
+class TestProductService(TestCase):
     """REST API Server Tests"""
 
     @classmethod
@@ -56,7 +62,7 @@ class TestYourResourceService(TestCase):
     def setUp(self):
         """Runs before each test"""
         self.client = app.test_client()
-        db.session.query(YourResourceModel).delete()  # clean up the last tests
+        db.session.query(Product).delete()  # clean up the last tests
         db.session.commit()
 
     def tearDown(self):
@@ -72,4 +78,32 @@ class TestYourResourceService(TestCase):
         resp = self.client.get("/")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
-    # Todo: Add your test cases here...
+    def test_404_not_found(self):
+        """It should return 404 for an unknown route"""
+        resp = self.client.get("/nonexistent-route")
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_405_method_not_allowed(self):
+        """It should return 405 when using a disallowed HTTP method"""
+        resp = self.client.post("/")
+        self.assertEqual(resp.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_bad_request_handler(self):
+        """It should return 400 for a bad request"""
+        resp, status_code = bad_request(Exception("bad data"))
+        self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_mediatype_not_supported_handler(self):
+        """It should return 415 for unsupported media type"""
+        resp, status_code = mediatype_not_supported(Exception("unsupported media type"))
+        self.assertEqual(status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+
+    def test_internal_server_error_handler(self):
+        """It should return 500 for internal server error"""
+        resp, status_code = internal_server_error(Exception("server error"))
+        self.assertEqual(status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def test_data_validation_error_handler(self):
+        """It should return 400 for DataValidationError"""
+        resp, status_code = request_validation_error(DataValidationError("test error"))
+        self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
