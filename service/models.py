@@ -98,7 +98,7 @@ class Product(db.Model):
             self.category = data["category"]
             self.available = data.get("available", True)
         except AttributeError as error:
-            raise DataValidationError("Invalid attribute: " + error.args[0]) from error
+            raise DataValidationError("Invalid attribute: " + str(error)) from error
         except KeyError as error:
             raise DataValidationError(
                 "Invalid Product: missing " + error.args[0]
