@@ -218,7 +218,6 @@ class TestProductModel(TestCase):
         product.name = "New Name"
         with patch.object(db.session, "commit", side_effect=Exception("DB error")):
             self.assertRaises(DataValidationError, product.update)
-        db.session.rollback()
 
     def test_delete_raises_data_validation_error(self):
         """It should raise DataValidationError if a database error occurs during delete"""
