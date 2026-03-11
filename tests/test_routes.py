@@ -25,13 +25,13 @@ from unittest import TestCase
 from wsgi import app
 from service.common import status
 from service.models import DataValidationError, db, Product
-from .factories import ProductFactory
 from service.common.error_handlers import (
     bad_request,
     mediatype_not_supported,
     internal_server_error,
     request_validation_error,
 )
+from .factories import ProductFactory
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
