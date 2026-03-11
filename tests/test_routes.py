@@ -155,3 +155,16 @@ class TestProductService(TestCase):
             content_type="text/plain",
         )
         self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+
+    def test_create_product_empty_json_body(self):
+        """It should return 400 for empty or invalid JSON bodies"""
+        resp = self.client.post(
+            "/products",
+            data="",
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+        data = resp.get_json()
+        self.assertIsNotNone(data)
+        self.assertEqual(data["error"], "Bad Request")
