@@ -23,7 +23,7 @@ and Delete YourResourceModel
 
 from flask import jsonify, request, url_for, abort
 from flask import current_app as app  # Import Flask application
-from service.models import Product
+from service.models import Product, DataValidationError
 from service.common import status  # HTTP Status Codes
 
 
@@ -43,4 +43,26 @@ def index():
 #  R E S T   A P I   E N D P O I N T S
 ######################################################################
 
-# Todo: Place your REST API code here ...
+######################################################################
+# CREATE A PRODUCT
+######################################################################
+@app.route("/products", methods=["POST"])
+def create_products():
+    """Creates a Product"""
+    if not request.is_json:
+        abort(status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, "Content-Type must be application/json")
+
+    data = request.get_json(silent=True)
+    if not data:
+        raise DataValidationError("Invalid Product: body of request contained bad or no data")
+
+    product = Product()
+    product.deserialize(data)
+    product.create()
+
+    location_url = url_for("create_products", _external=True)
+    return (
+        jsonify(product.serialize()),
+        status.HTTP_201_CREATED,
+        {"Location": f"{location_url}/{product.id}"},
+    )
