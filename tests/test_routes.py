@@ -168,3 +168,47 @@ class TestProductService(TestCase):
         data = resp.get_json()
         self.assertIsNotNone(data)
         self.assertEqual(data["error"], "Bad Request")
+
+    def test_get_product_success(self):
+        """It should retrieve a Product and return 200"""
+        product = ProductFactory()
+        payload = product.serialize()
+        payload.pop("id", None)
+
+        create_resp = self.client.post("/products", json=payload)
+        self.assertEqual(create_resp.status_code, status.HTTP_201_CREATED)
+        created = create_resp.get_json()
+        self.assertIsNotNone(created)
+        product_id = created["id"]
+
+        resp = self.client.get(f"/products/{product_id}")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        data = resp.get_json()
+        self.assertIsNotNone(data)
+        self.assertEqual(data["id"], product_id)
+        self.assertEqual(data["name"], payload["name"])
+        self.assertEqual(data["description"], payload["description"])
+        self.assertEqual(data["price"], payload["price"])
+        self.assertEqual(data["category"], payload["category"])
+        self.assertEqual(data["available"], payload["available"])
+
+    def test_get_product_not_found(self):
+        """It should return 404 when Product does not exist"""
+        resp = self.client.get("/products/999999")
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+        data = resp.get_json()
+        self.assertIsNotNone(data)
+        self.assertEqual(data["error"], "Not Found")
+        self.assertIn("Product with id", data["message"])
+
+    def test_get_product_invalid_id_format(self):
+        """It should return 400 when id format is invalid"""
+        resp = self.client.get("/products/abc")
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+        data = resp.get_json()
+        self.assertIsNotNone(data)
+        self.assertEqual(data["error"], "Bad Request")
+        self.assertIn("must be an integer", data["message"])
