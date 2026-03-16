@@ -76,8 +76,16 @@ class TestProductService(TestCase):
 
     def test_index(self):
         """It should call the home page"""
-        resp = self.client.get("/")
-        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        response = self.client.get("/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.content_type, "application/json")
+        data = response.get_json()
+        self.assertIn("name", data)
+        self.assertIn("version", data)
+        self.assertIn("paths", data)
+        self.assertEqual(data["name"], "Product Catalog Service")
+        self.assertEqual(data["version"], "1.0")
+        self.assertIsInstance(data["paths"], list)
 
     def test_404_not_found(self):
         """It should return 404 for an unknown route"""
