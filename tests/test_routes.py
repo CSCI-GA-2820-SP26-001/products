@@ -212,3 +212,83 @@ class TestProductService(TestCase):
         self.assertIsNotNone(data)
         self.assertEqual(data["error"], "Bad Request")
         self.assertIn("must be an integer", data["message"])
+
+    def test_update_product_success(self):
+        """It should update an existing Product and return 200"""
+        product = ProductFactory()
+        payload = product.serialize()
+        payload.pop("id", None)
+
+        create_resp = self.client.post("/products", json=payload)
+        self.assertEqual(create_resp.status_code, status.HTTP_201_CREATED)
+        created = create_resp.get_json()
+        product_id = created["id"]
+
+        updated_data = created.copy()
+        updated_data["name"] = "Updated Product Name"
+        updated_data["price"] = 99.99
+
+        resp = self.client.put(f"/products/{product_id}", json=updated_data)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        data = resp.get_json()
+        self.assertIsNotNone(data)
+        self.assertEqual(data["id"], product_id)
+        self.assertEqual(data["name"], "Updated Product Name")
+        self.assertEqual(str(data["price"]), "99.99")
+
+    def test_update_product_not_found(self):
+        """It should return 404 when updating a Product that does not exist"""
+        product = ProductFactory()
+        payload = product.serialize()
+        payload["id"] = 999999
+
+        resp = self.client.put("/products/999999", json=payload)
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+        data = resp.get_json()
+        self.assertIsNotNone(data)
+        self.assertEqual(data["error"], "Not Found")
+
+    def test_update_product_invalid_id_format(self):
+        """It should return 400 when update id format is invalid"""
+        product = ProductFactory()
+        payload = product.serialize()
+
+        resp = self.client.put("/products/abc", json=payload)
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+        data = resp.get_json()
+        self.assertIsNotNone(data)
+        self.assertEqual(data["error"], "Bad Request")
+
+    def test_update_product_wrong_content_type(self):
+        """It should return 415 for non-JSON content types on update"""
+        resp = self.client.put(
+            "/products/1",
+            data="not json",
+            content_type="text/plain",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+
+    def test_update_product_empty_json_body(self):
+        """It should return 400 for empty update body"""
+        product = ProductFactory()
+        payload = product.serialize()
+        payload.pop("id", None)
+
+        create_resp = self.client.post("/products", json=payload)
+        self.assertEqual(create_resp.status_code, status.HTTP_201_CREATED)
+        created = create_resp.get_json()
+        product_id = created["id"]
+
+        resp = self.client.put(
+            f"/products/{product_id}",
+            data="",
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+        data = resp.get_json()
+        self.assertIsNotNone(data)
+        self.assertEqual(data["error"], "Bad Request")
