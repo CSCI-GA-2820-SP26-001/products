@@ -66,3 +66,27 @@ def create_products():
         status.HTTP_201_CREATED,
         {"Location": f"{location_url}/{product.id}"},
     )
+
+
+######################################################################
+# RETRIEVE A PRODUCT
+######################################################################
+@app.route("/products/<product_id>", methods=["GET"])
+def get_product(product_id):
+    """Returns a Product when given its id"""
+    try:
+        product_id_int = int(product_id)
+    except (TypeError, ValueError) as error:
+        abort(
+            status.HTTP_400_BAD_REQUEST,
+            f"Invalid product id format: must be an integer ({error})",
+        )
+
+    product = Product.find(product_id_int)
+    if not product:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Product with id {product_id_int} was not found.",
+        )
+
+    return jsonify(product.serialize()), status.HTTP_200_OK
