@@ -30,13 +30,17 @@ from service.common import status  # HTTP Status Codes
 ######################################################################
 # GET INDEX
 ######################################################################
-@app.route("/")
+@app.route("/", methods=["GET"])
 def index():
     """Root URL response"""
-    return (
-        "Reminder: return some useful information in json format about the service here",
-        status.HTTP_200_OK,
-    )
+    return {
+        "name": "Product Catalog Service",
+        "version": "1.0",
+        "paths": [
+            "/products",
+            "/products/{id}"
+        ]
+    }, status.HTTP_200_OK
 
 
 ######################################################################
@@ -88,5 +92,45 @@ def get_product(product_id):
             status.HTTP_404_NOT_FOUND,
             f"Product with id {product_id_int} was not found.",
         )
+
+    return jsonify(product.serialize()), status.HTTP_200_OK
+
+
+######################################################################
+# UPDATE A PRODUCT
+######################################################################
+@app.route("/products/<product_id>", methods=["PUT"])
+def update_product(product_id):
+    """Updates an existing Product"""
+    if not request.is_json:
+        abort(
+            status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            "Content-Type must be application/json",
+        )
+
+    try:
+        product_id_int = int(product_id)
+    except (TypeError, ValueError) as error:
+        abort(
+            status.HTTP_400_BAD_REQUEST,
+            f"Invalid product id format: must be an integer ({error})",
+        )
+
+    product = Product.find(product_id_int)
+    if not product:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Product with id {product_id_int} was not found.",
+        )
+
+    data = request.get_json(silent=True)
+    if not data:
+        raise DataValidationError(
+            "Invalid Product: body of request contained bad or no data"
+        )
+
+    data["id"] = product_id_int
+    product.deserialize(data)
+    product.update()
 
     return jsonify(product.serialize()), status.HTTP_200_OK
