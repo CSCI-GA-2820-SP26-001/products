@@ -23,7 +23,7 @@ and Delete YourResourceModel
 
 from flask import jsonify, request, url_for, abort
 from flask import current_app as app  # Import Flask application
-from service.models import Product, DataValidationError
+from service.models import Product, DataValidationError, DatabaseConnectionError
 from service.common import status  # HTTP Status Codes
 
 
@@ -134,3 +134,18 @@ def update_product(product_id):
     product.update()
 
     return jsonify(product.serialize()), status.HTTP_200_OK
+
+############################################################
+# List products
+############################################################
+@app.route("/products", methods=["GET"])
+def list_products():
+    """List products"""
+    app.logger.info("Request to list all products...")
+    products = []
+    try:
+        products = Product.all()
+    except DatabaseConnectionError as err:
+        abort(status.HTTP_503_SERVICE_UNAVAILABLE, err)
+
+    return jsonify(products)
