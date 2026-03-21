@@ -3,31 +3,64 @@
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python](https://img.shields.io/badge/Language-Python-blue.svg)](https://python.org/)
 
-This is a skeleton you can use to start your projects.
-
-**Note:** _Feel free to overwrite this `README.md` file with the one that describes your project._
+#This service provides a REST API for managing a catalog of products. It allows users to create, retrieve, update, delete, and list products stored in a PostgreSQL database.
 
 ## Overview
 
-This project template contains starter code for your class project. The `/service` folder contains your `models.py` file for your model and a `routes.py` file for your service. The `/tests` folder has test case starter code for testing the model and the service separately. All you need to do is add your functionality. You can use the [lab-flask-tdd](https://github.com/nyu-devops/lab-flask-tdd) for code examples to copy from.
+The Product Catalog Service is a backend application built with Flask that exposes RESTful endpoints to manage product data.
 
-## Automatic Setup
+It supports the following operations:
+- Create a product
+- Retrieve a product by ID
+- Update a product
+- Delete a product
+- List all products
 
-The best way to use this repo is to start your own repo using it as a git template. To do this just press the green **Use this template** button in GitHub and this will become the source for your repository.
+## Product Data Model
 
-## Manual Setup
+A Product has the following attributes:
 
-You can also clone this repository and then copy and paste the starter code into your project repo folder on your local computer. Be careful not to copy over your own `README.md` file so be selective in what you copy.
+| Field        | Type     | Description                         |
+|-------------|---------|-------------------------------------|
+| id          | Integer | Unique identifier (auto-generated) |
+| name        | String  | Name of the product                |
+| description | String  | Description of the product         |
+| price       | Decimal | Price of the product               |
+| category    | String  | Product category                   |
+| available   | Boolean | Availability (default: True)       |
 
-There are 4 hidden files that you will need to copy manually if you use the Mac Finder or Windows Explorer to copy files from this folder into your repo folder.
+## API Endpoints
 
-These should be copied using a bash shell as follows:
+### Root Endpoint
+GET /
 
-```bash
-    cp .gitignore  ../<your_repo_folder>/
-    cp .flaskenv ../<your_repo_folder>/
-    cp .gitattributes ../<your_repo_folder>/
-```
+Returns basic service information and available paths.
+
+### Create a Product
+POST /products
+
+Creates a new product.
+
+### Retrieve a Product
+GET /products/{id}
+
+Returns a product by its ID.
+
+### Update a Product
+PUT /products/{id}
+
+Updates an existing product.
+
+### Delete a Product
+DELETE /products/{id}
+
+Deletes a product by its ID.
+
+### List Products
+GET /products
+
+Returns a list of all products.
+
 
 ## Contents
 
