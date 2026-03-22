@@ -148,4 +148,4 @@ def list_products():
     except DatabaseConnectionError as err:
         abort(status.HTTP_503_SERVICE_UNAVAILABLE, err)
 
-    return jsonify(products)
+    return jsonify([product.serialize() for product in products])
