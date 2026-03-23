@@ -33,16 +33,14 @@ from service.common.error_handlers import (
 )
 from .factories import ProductFactory
 
-DATABASE_URI = os.getenv(
-    "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
-)
+DATABASE_URI = os.getenv("DATABASE_URI", "sqlite:///test.db")
 
 
 ######################################################################
 #  T E S T   C A S E S
 ######################################################################
 # pylint: disable=too-many-public-methods
-class TestProductService(TestCase): 
+class TestProductService(TestCase):
     """REST API Server Tests"""
 
     @classmethod
@@ -201,6 +199,22 @@ class TestProductService(TestCase):
         self.assertEqual(data["category"], payload["category"])
         self.assertEqual(data["available"], payload["available"])
 
+    def test_list_products(self):
+        """It should list all Products"""
+        products = ProductFactory.create_batch(3)
+        for product in products:
+            payload = product.serialize()
+            payload.pop("id", None)
+            resp = self.client.post("/products", json=payload)
+            self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        resp = self.client.get("/products")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.content_type, "application/json")
+
+        data = resp.get_json()
+        self.assertEqual(len(data), 3)
+
     def test_get_product_not_found(self):
         """It should return 404 when Product does not exist"""
         resp = self.client.get("/products/999999")
@@ -295,6 +309,41 @@ class TestProductService(TestCase):
             data="",
             content_type="application/json",
         )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+        data = resp.get_json()
+        self.assertIsNotNone(data)
+        self.assertEqual(data["error"], "Bad Request")
+
+    def test_delete_product_success(self):
+        """It should delete an existing Product and return 204"""
+        product = ProductFactory()
+        payload = product.serialize()
+        payload.pop("id", None)
+
+        create_resp = self.client.post("/products", json=payload)
+        self.assertEqual(create_resp.status_code, status.HTTP_201_CREATED)
+        created = create_resp.get_json()
+        product_id = created["id"]
+
+        resp = self.client.delete(f"/products/{product_id}")
+        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+
+        get_resp = self.client.get(f"/products/{product_id}")
+        self.assertEqual(get_resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_delete_product_not_found(self):
+        """It should return 404 when deleting a Product that does not exist"""
+        resp = self.client.delete("/products/999999")
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+        data = resp.get_json()
+        self.assertIsNotNone(data)
+        self.assertEqual(data["error"], "Not Found")
+
+    def test_delete_product_invalid_id_format(self):
+        """It should return 400 when delete id format is invalid"""
+        resp = self.client.delete("/products/abc")
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
         data = resp.get_json()

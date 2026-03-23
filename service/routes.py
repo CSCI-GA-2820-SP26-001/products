@@ -23,7 +23,7 @@ and Delete YourResourceModel
 
 from flask import jsonify, request, url_for, abort
 from flask import current_app as app  # Import Flask application
-from service.models import Product, DataValidationError, DatabaseConnectionError
+from service.models import Product, DataValidationError
 from service.common import status  # HTTP Status Codes
 
 
@@ -36,16 +36,14 @@ def index():
     return {
         "name": "Product Catalog Service",
         "version": "1.0",
-        "paths": [
-            "/products",
-            "/products/{id}"
-        ]
+        "paths": ["/products", "/products/{id}"],
     }, status.HTTP_200_OK
 
 
 ######################################################################
 #  R E S T   A P I   E N D P O I N T S
 ######################################################################
+
 
 ######################################################################
 # CREATE A PRODUCT
@@ -54,11 +52,16 @@ def index():
 def create_products():
     """Creates a Product"""
     if not request.is_json:
-        abort(status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, "Content-Type must be application/json")
+        abort(
+            status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            "Content-Type must be application/json",
+        )
 
     data = request.get_json(silent=True)
     if not data:
-        raise DataValidationError("Invalid Product: body of request contained bad or no data")
+        raise DataValidationError(
+            "Invalid Product: body of request contained bad or no data"
+        )
 
     product = Product()
     product.deserialize(data)
@@ -135,6 +138,7 @@ def update_product(product_id):
 
     return jsonify(product.serialize()), status.HTTP_200_OK
 
+
 ############################################################
 # List products
 ############################################################
@@ -142,10 +146,30 @@ def update_product(product_id):
 def list_products():
     """List products"""
     app.logger.info("Request to list all products...")
-    products = []
-    try:
-        products = Product.all()
-    except DatabaseConnectionError as err:
-        abort(status.HTTP_503_SERVICE_UNAVAILABLE, err)
-
+    products = Product.all()
     return jsonify([product.serialize() for product in products])
+
+
+############################################################
+# Delete a Product
+############################################################
+@app.route("/products/<product_id>", methods=["DELETE"])
+def delete_product(product_id):
+    """Deletes a Product"""
+    try:
+        product_id_int = int(product_id)
+    except (TypeError, ValueError) as error:
+        abort(
+            status.HTTP_400_BAD_REQUEST,
+            f"Invalid product id format: must be an integer ({error})",
+        )
+
+    product = Product.find(product_id_int)
+    if not product:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Product with id {product_id_int} was not found.",
+        )
+
+    product.delete()
+    return "", status.HTTP_204_NO_CONTENT
