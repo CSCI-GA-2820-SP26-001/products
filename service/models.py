@@ -5,8 +5,6 @@ All of the models are stored in this module
 """
 
 import logging
-import redis
-from redis.exceptions import ConnectionError as RedisConnectionError
 from decimal import Decimal
 from flask_sqlalchemy import SQLAlchemy
 
@@ -19,10 +17,6 @@ db = SQLAlchemy()
 
 class DataValidationError(Exception):
     """Used for an data validation errors when deserializing"""
-
-
-class DatabaseConnectionError(RedisConnectionError):
-    """Generic Exception for Redis database connection errors"""
 
 
 class Product(db.Model):
