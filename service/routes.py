@@ -66,6 +66,7 @@ def create_products():
     product = Product()
     product.deserialize(data)
     product.create()
+    app.logger.info("Product [%s] created with id [%s]", product.name, product.id)
 
     location_url = url_for("create_products", _external=True)
     return (
@@ -135,6 +136,7 @@ def update_product(product_id):
     data["id"] = product_id_int
     product.deserialize(data)
     product.update()
+    app.logger.info("Product [%s] updated", product_id_int)
 
     return jsonify(product.serialize()), status.HTTP_200_OK
 
@@ -172,4 +174,5 @@ def delete_product(product_id):
         )
 
     product.delete()
+    app.logger.info("Product [%s] deleted", product_id_int)
     return "", status.HTTP_204_NO_CONTENT

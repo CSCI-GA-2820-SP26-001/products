@@ -86,14 +86,24 @@ class TestProductService(TestCase):
         self.assertIsInstance(data["paths"], list)
 
     def test_404_not_found(self):
-        """It should return 404 for an unknown route"""
+        """It should return 404 JSON for an unknown route"""
         resp = self.client.get("/nonexistent-route")
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(resp.content_type, "application/json")
+        data = resp.get_json()
+        self.assertIn("error", data)
+        self.assertIn("message", data)
+        self.assertEqual(data["status"], status.HTTP_404_NOT_FOUND)
 
     def test_405_method_not_allowed(self):
-        """It should return 405 when using a disallowed HTTP method"""
+        """It should return 405 JSON when using a disallowed HTTP method"""
         resp = self.client.post("/")
         self.assertEqual(resp.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        self.assertEqual(resp.content_type, "application/json")
+        data = resp.get_json()
+        self.assertIn("error", data)
+        self.assertIn("message", data)
+        self.assertEqual(data["status"], status.HTTP_405_METHOD_NOT_ALLOWED)
 
     def test_bad_request_handler(self):
         """It should return 400 for a bad request"""

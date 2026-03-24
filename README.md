@@ -3,7 +3,7 @@
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python](https://img.shields.io/badge/Language-Python-blue.svg)](https://python.org/)
 
-#This service provides a REST API for managing a catalog of products. It allows users to create, retrieve, update, delete, and list products stored in a PostgreSQL database.
+This service provides a REST API for managing a catalog of products. It allows users to create, retrieve, update, delete, and list products stored in a PostgreSQL database.
 
 ## Overview
 
@@ -29,38 +29,113 @@ A Product has the following attributes:
 | category    | String  | Product category                   |
 | available   | Boolean | Availability (default: True)       |
 
+## Running the Service
+
+Start the service locally using honcho:
+
+```bash
+make run
+```
+
+The service will be available at `http://localhost:8080`.
+
+## Running Tests
+
+Run the full test suite with coverage:
+
+```bash
+make test
+```
+
+This runs pytest with a minimum coverage threshold of 95%.
+
+## Linting
+
+Check code style against PEP8:
+
+```bash
+make lint
+```
+
 ## API Endpoints
 
 ### Root Endpoint
-GET /
+
+`GET /`
 
 Returns basic service information and available paths.
 
-### Create a Product
-POST /products
+**Response:**
 
-Creates a new product.
+```json
+{
+  "name": "Product Catalog Service",
+  "version": "1.0",
+  "paths": ["/products", "/products/{id}"]
+}
+```
+
+### Create a Product
+
+`POST /products`
+
+Creates a new product. Requires `Content-Type: application/json`.
+
+**Request Body (required fields marked with *):**
+
+| Field       | Type    | Required | Description                    |
+|-------------|---------|----------|--------------------------------|
+| name        | String  | *        | Name of the product            |
+| price       | Decimal | *        | Price of the product           |
+| category    | String  | *        | Product category               |
+| description | String  |          | Description (default: "")      |
+| available   | Boolean |          | Availability (default: true)   |
+
+**Example:**
+
+```json
+{
+  "name": "Widget",
+  "description": "A useful widget",
+  "price": 19.99,
+  "category": "gadgets",
+  "available": true
+}
+```
+
+**Response:** `201 Created` with the created product and a `Location` header.
 
 ### Retrieve a Product
-GET /products/{id}
+
+`GET /products/{id}`
 
 Returns a product by its ID.
 
-### Update a Product
-PUT /products/{id}
+**Response:** `200 OK` with the product, or `404 Not Found` if it does not exist.
 
-Updates an existing product.
+### Update a Product
+
+`PUT /products/{id}`
+
+Updates an existing product. Requires `Content-Type: application/json`. The request body uses the same fields as Create.
+
+**Response:** `200 OK` with the updated product, or `404 Not Found` if it does not exist.
 
 ### Delete a Product
-DELETE /products/{id}
+
+`DELETE /products/{id}`
 
 Deletes a product by its ID.
 
+**Response:** `204 No Content` on success, or `404 Not Found` if it does not exist.
+
 ### List Products
-GET /products
 
-Returns a list of all products.
+`GET /products`
 
+Returns a JSON array of all products.
+
+**Response:** `200 OK` with a list of products.
 
 ## Contents
 
