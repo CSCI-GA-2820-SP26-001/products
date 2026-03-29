@@ -23,7 +23,7 @@ and Delete YourResourceModel
 
 from flask import jsonify, request, url_for, abort
 from flask import current_app as app  # Import Flask application
-from service.models import Product, DataValidationError
+from service.models import Product
 from service.common import status  # HTTP Status Codes
 
 
@@ -57,14 +57,8 @@ def create_products():
             "Content-Type must be application/json",
         )
 
-    data = request.get_json(silent=True)
-    if not data:
-        raise DataValidationError(
-            "Invalid Product: body of request contained bad or no data"
-        )
-
     product = Product()
-    product.deserialize(data)
+    product.deserialize(request.get_json(silent=True))
     product.create()
     app.logger.info("Product [%s] created with id [%s]", product.name, product.id)
 
@@ -111,12 +105,7 @@ def update_product(product_id):
             f"Product with id {product_id} was not found.",
         )
 
-    data = request.get_json(silent=True)
-    if not data:
-        raise DataValidationError(
-            "Invalid Product: body of request contained bad or no data"
-        )
-
+    data = request.get_json(silent=True) or {}
     data["id"] = product_id
     product.deserialize(data)
     product.update()
