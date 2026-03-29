@@ -130,8 +130,8 @@ class TestProductService(TestCase):
         self.assertEqual(data["status"], status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
     def test_internal_server_error_handler(self):
-        """It should return 500 for internal server error"""
-        resp, status_code = internal_server_error(Exception("server error"))
+        """It should return 500 for internal server error (handler unit check)"""
+        _, status_code = internal_server_error(Exception("server error"))
         self.assertEqual(status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     ######################################################################
