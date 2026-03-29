@@ -79,22 +79,14 @@ def create_products():
 ######################################################################
 # RETRIEVE A PRODUCT
 ######################################################################
-@app.route("/products/<product_id>", methods=["GET"])
+@app.route("/products/<int:product_id>", methods=["GET"])
 def get_product(product_id):
     """Returns a Product when given its id"""
-    try:
-        product_id_int = int(product_id)
-    except (TypeError, ValueError) as error:
-        abort(
-            status.HTTP_400_BAD_REQUEST,
-            f"Invalid product id format: must be an integer ({error})",
-        )
-
-    product = Product.find(product_id_int)
+    product = Product.find(product_id)
     if not product:
         abort(
             status.HTTP_404_NOT_FOUND,
-            f"Product with id {product_id_int} was not found.",
+            f"Product with id {product_id} was not found.",
         )
 
     return jsonify(product.serialize()), status.HTTP_200_OK
@@ -103,7 +95,7 @@ def get_product(product_id):
 ######################################################################
 # UPDATE A PRODUCT
 ######################################################################
-@app.route("/products/<product_id>", methods=["PUT"])
+@app.route("/products/<int:product_id>", methods=["PUT"])
 def update_product(product_id):
     """Updates an existing Product"""
     if not request.is_json:
@@ -112,19 +104,11 @@ def update_product(product_id):
             "Content-Type must be application/json",
         )
 
-    try:
-        product_id_int = int(product_id)
-    except (TypeError, ValueError) as error:
-        abort(
-            status.HTTP_400_BAD_REQUEST,
-            f"Invalid product id format: must be an integer ({error})",
-        )
-
-    product = Product.find(product_id_int)
+    product = Product.find(product_id)
     if not product:
         abort(
             status.HTTP_404_NOT_FOUND,
-            f"Product with id {product_id_int} was not found.",
+            f"Product with id {product_id} was not found.",
         )
 
     data = request.get_json(silent=True)
@@ -133,10 +117,10 @@ def update_product(product_id):
             "Invalid Product: body of request contained bad or no data"
         )
 
-    data["id"] = product_id_int
+    data["id"] = product_id
     product.deserialize(data)
     product.update()
-    app.logger.info("Product [%s] updated", product_id_int)
+    app.logger.info("Product [%s] updated", product_id)
 
     return jsonify(product.serialize()), status.HTTP_200_OK
 
@@ -155,25 +139,17 @@ def list_products():
 ############################################################
 # Delete a Product
 ############################################################
-@app.route("/products/<product_id>", methods=["DELETE"])
+@app.route("/products/<int:product_id>", methods=["DELETE"])
 def delete_product(product_id):
     """Deletes a Product"""
-    try:
-        product_id_int = int(product_id)
-    except (TypeError, ValueError) as error:
-        abort(
-            status.HTTP_400_BAD_REQUEST,
-            f"Invalid product id format: must be an integer ({error})",
-        )
-
-    product = Product.find(product_id_int)
+    product = Product.find(product_id)
     if not product:
         app.logger.info(
             "Delete idempotent: no product with id [%s] (returning 204)",
-            product_id_int,
+            product_id,
         )
         return "", status.HTTP_204_NO_CONTENT
 
     product.delete()
-    app.logger.info("Product [%s] deleted", product_id_int)
+    app.logger.info("Product [%s] deleted", product_id)
     return "", status.HTTP_204_NO_CONTENT

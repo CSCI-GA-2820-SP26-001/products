@@ -245,14 +245,13 @@ class TestProductService(TestCase):
         self.assertIn("Product with id", data["message"])
 
     def test_get_product_invalid_id_format(self):
-        """It should return 400 when id format is invalid"""
+        """It should return 404 when id is not an integer (Flask routing)"""
         resp = self.client.get("/products/abc")
-        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(resp.content_type, "application/json")
         data = resp.get_json()
         self.assertIsNotNone(data)
-        self.assertEqual(data["error"], "Bad Request")
-        self.assertIn("must be an integer", data["message"])
+        self.assertEqual(data["error"], "Not Found")
 
     def test_update_product_success(self):
         """It should update an existing Product and return 200"""
@@ -292,16 +291,16 @@ class TestProductService(TestCase):
         self.assertEqual(data["error"], "Not Found")
 
     def test_update_product_invalid_id_format(self):
-        """It should return 400 when update id format is invalid"""
+        """It should return 404 when update id is not an integer (Flask routing)"""
         product = ProductFactory()
         payload = product.serialize()
 
         resp = self.client.put("/products/abc", json=payload)
-        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(resp.content_type, "application/json")
         data = resp.get_json()
         self.assertIsNotNone(data)
-        self.assertEqual(data["error"], "Bad Request")
+        self.assertEqual(data["error"], "Not Found")
 
     def test_update_product_wrong_content_type(self):
         """It should return 415 for non-JSON content types on update"""
@@ -358,10 +357,10 @@ class TestProductService(TestCase):
         self.assertEqual(resp.get_data(as_text=True), "")
 
     def test_delete_product_invalid_id_format(self):
-        """It should return 400 when delete id format is invalid"""
+        """It should return 404 when delete id is not an integer (Flask routing)"""
         resp = self.client.delete("/products/abc")
-        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(resp.content_type, "application/json")
         data = resp.get_json()
         self.assertIsNotNone(data)
-        self.assertEqual(data["error"], "Bad Request")
+        self.assertEqual(data["error"], "Not Found")
