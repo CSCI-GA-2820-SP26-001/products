@@ -194,7 +194,7 @@ class TestProductModel(TestCase):
     def test_deserialize_attribute_error_raises_data_validation_error(self):
         """It should raise DataValidationError when data causes AttributeError"""
 
-        class NoGetDict:
+        class NoGetDict:  # pylint: disable=too-few-public-methods
             """A dict-like object without .get() method"""
 
             def __getitem__(self, key):
