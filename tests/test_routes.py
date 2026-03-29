@@ -25,7 +25,7 @@ from unittest import TestCase
 from wsgi import app
 from service.common import status
 from service.models import db, Product
-from service.common.error_handlers import mediatype_not_supported, internal_server_error
+from service.common.error_handlers import internal_server_error
 from .factories import ProductFactory
 
 DATABASE_URI = os.getenv("DATABASE_URI", "sqlite:///test.db")
@@ -114,10 +114,20 @@ class TestProductService(TestCase):
         self.assertIn("message", data)
         self.assertEqual(data["status"], status.HTTP_400_BAD_REQUEST)
 
-    def test_mediatype_not_supported_handler(self):
-        """It should return 415 for unsupported media type"""
-        _, status_code = mediatype_not_supported(Exception("unsupported media type"))
-        self.assertEqual(status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+    def test_post_products_unsupported_media_type_returns_json(self):
+        """It should return 415 JSON from the REST API for non-JSON create"""
+        resp = self.client.post(
+            "/products",
+            data="not json",
+            content_type="text/plain",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+        self.assertEqual(resp.content_type, "application/json")
+        data = resp.get_json()
+        self.assertIsNotNone(data)
+        self.assertEqual(data["error"], "Unsupported media type")
+        self.assertIn("message", data)
+        self.assertEqual(data["status"], status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
     def test_internal_server_error_handler(self):
         """It should return 500 for internal server error"""
