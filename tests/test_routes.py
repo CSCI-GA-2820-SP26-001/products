@@ -24,13 +24,8 @@ import logging
 from unittest import TestCase
 from wsgi import app
 from service.common import status
-from service.models import DataValidationError, db, Product
-from service.common.error_handlers import (
-    bad_request,
-    mediatype_not_supported,
-    internal_server_error,
-    request_validation_error,
-)
+from service.models import db, Product
+from service.common.error_handlers import mediatype_not_supported, internal_server_error
 from .factories import ProductFactory
 
 DATABASE_URI = os.getenv("DATABASE_URI", "sqlite:///test.db")
@@ -105,25 +100,29 @@ class TestProductService(TestCase):
         self.assertIn("message", data)
         self.assertEqual(data["status"], status.HTTP_405_METHOD_NOT_ALLOWED)
 
-    def test_bad_request_handler(self):
-        """It should return 400 for a bad request"""
-        resp, status_code = bad_request(Exception("bad data"))
-        self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
+    def test_post_products_bad_request_returns_json(self):
+        """It should return 400 JSON from the REST API for invalid create body"""
+        resp = self.client.post(
+            "/products",
+            json={"description": "no name", "price": "1.00", "category": "x"},
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(resp.content_type, "application/json")
+        data = resp.get_json()
+        self.assertIsNotNone(data)
+        self.assertEqual(data["error"], "Bad Request")
+        self.assertIn("message", data)
+        self.assertEqual(data["status"], status.HTTP_400_BAD_REQUEST)
 
     def test_mediatype_not_supported_handler(self):
         """It should return 415 for unsupported media type"""
-        resp, status_code = mediatype_not_supported(Exception("unsupported media type"))
+        _, status_code = mediatype_not_supported(Exception("unsupported media type"))
         self.assertEqual(status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
     def test_internal_server_error_handler(self):
         """It should return 500 for internal server error"""
         resp, status_code = internal_server_error(Exception("server error"))
         self.assertEqual(status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-    def test_data_validation_error_handler(self):
-        """It should return 400 for DataValidationError"""
-        resp, status_code = request_validation_error(DataValidationError("test error"))
-        self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
 
     ######################################################################
     #  P R O D U C T   R O U T E   T E S T   C A S E S
