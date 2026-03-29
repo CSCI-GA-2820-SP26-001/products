@@ -342,14 +342,11 @@ class TestProductService(TestCase):
         get_resp = self.client.get(f"/products/{product_id}")
         self.assertEqual(get_resp.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_delete_product_not_found(self):
-        """It should return 404 when deleting a Product that does not exist"""
+    def test_delete_product_not_found_is_idempotent(self):
+        """It should return 204 when deleting a missing Product (idempotent DELETE)"""
         resp = self.client.delete("/products/999999")
-        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
-
-        data = resp.get_json()
-        self.assertIsNotNone(data)
-        self.assertEqual(data["error"], "Not Found")
+        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(resp.get_data(as_text=True), "")
 
     def test_delete_product_invalid_id_format(self):
         """It should return 400 when delete id format is invalid"""

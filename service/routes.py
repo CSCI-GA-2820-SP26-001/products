@@ -168,10 +168,11 @@ def delete_product(product_id):
 
     product = Product.find(product_id_int)
     if not product:
-        abort(
-            status.HTTP_404_NOT_FOUND,
-            f"Product with id {product_id_int} was not found.",
+        app.logger.info(
+            "Delete idempotent: no product with id [%s] (returning 204)",
+            product_id_int,
         )
+        return "", status.HTTP_204_NO_CONTENT
 
     product.delete()
     app.logger.info("Product [%s] deleted", product_id_int)
