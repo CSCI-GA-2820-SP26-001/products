@@ -256,6 +256,26 @@ class TestProductService(TestCase):
         self.assertEqual(data[0]["name"], "Phone")
         self.assertEqual(data[0]["category"], "Electronics")
 
+    def test_list_products_category_filter_case_insensitive(self):
+        """It should match category case-insensitively"""
+        resp = self.client.post(
+            "/products",
+            json={
+                "name": "Cam",
+                "description": "d",
+                "price": "1.00",
+                "category": "Electronics",
+                "available": True,
+            },
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        resp = self.client.get("/products?category=electronics")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["category"], "Electronics")
+
     def test_get_product_not_found(self):
         """It should return 404 when Product does not exist"""
         resp = self.client.get("/products/999999")
