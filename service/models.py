@@ -7,6 +7,7 @@ All of the models are stored in this module
 import logging
 from decimal import Decimal
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import func
 
 
 logger = logging.getLogger("flask.app")
@@ -136,3 +137,15 @@ class Product(db.Model):
         """
         logger.info("Processing name query for %s ...", name)
         return cls.query.filter(cls.name == name)
+
+    @classmethod
+    def find_by_category(cls, category):
+        """Returns all Products whose category matches case-insensitively.
+
+        Args:
+            category (string): the category to match
+        """
+        logger.info("Processing category query for %s ...", category)
+        return (
+            cls.query.filter(func.lower(cls.category) == category.lower()).all()
+        )
