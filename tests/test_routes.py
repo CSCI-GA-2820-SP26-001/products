@@ -299,6 +299,27 @@ class TestProductService(TestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertEqual(len(resp.get_json()), 2)
 
+    def test_list_products_category_duplicate_query_uses_first(self):
+        """It should use the first category value when the key is repeated"""
+        for name, cat in [("A", "Electronics"), ("B", "Clothing")]:
+            resp = self.client.post(
+                "/products",
+                json={
+                    "name": name,
+                    "description": "d",
+                    "price": "1.00",
+                    "category": cat,
+                    "available": True,
+                },
+            )
+            self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        resp = self.client.get("/products?category=Electronics&category=Clothing")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["name"], "A")
+
     def test_get_product_not_found(self):
         """It should return 404 when Product does not exist"""
         resp = self.client.get("/products/999999")
