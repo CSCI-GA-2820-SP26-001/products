@@ -320,6 +320,24 @@ class TestProductService(TestCase):
         self.assertEqual(len(data), 1)
         self.assertEqual(data[0]["name"], "A")
 
+    def test_list_products_category_no_match_returns_empty_list(self):
+        """It should return 200 with an empty list when no Products match category"""
+        resp = self.client.post(
+            "/products",
+            json={
+                "name": "Thing",
+                "description": "d",
+                "price": "1.00",
+                "category": "Electronics",
+                "available": True,
+            },
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        resp = self.client.get("/products?category=Books")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.get_json(), [])
+
     def test_get_product_not_found(self):
         """It should return 404 when Product does not exist"""
         resp = self.client.get("/products/999999")
