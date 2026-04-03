@@ -234,6 +234,28 @@ class TestProductService(TestCase):
         data = resp.get_json()
         self.assertEqual(len(data), 3)
 
+    def test_list_products_by_category(self):
+        """It should list only Products matching the category query param"""
+        for name, cat in [("Phone", "Electronics"), ("Shirt", "Clothing")]:
+            resp = self.client.post(
+                "/products",
+                json={
+                    "name": name,
+                    "description": "d",
+                    "price": "9.99",
+                    "category": cat,
+                    "available": True,
+                },
+            )
+            self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        resp = self.client.get("/products?category=Electronics")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["name"], "Phone")
+        self.assertEqual(data[0]["category"], "Electronics")
+
     def test_get_product_not_found(self):
         """It should return 404 when Product does not exist"""
         resp = self.client.get("/products/999999")
