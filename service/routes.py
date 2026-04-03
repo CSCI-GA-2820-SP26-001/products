@@ -119,9 +119,16 @@ def update_product(product_id):
 ############################################################
 @app.route("/products", methods=["GET"])
 def list_products():
-    """List products"""
-    app.logger.info("Request to list all products...")
-    products = Product.all()
+    """List products, optionally filtered by category (case-insensitive)."""
+    category = request.args.get("category")
+    if category is not None:
+        category = category.strip()
+    if category:
+        app.logger.info("Request to list products with category [%s]...", category)
+        products = Product.find_by_category(category)
+    else:
+        app.logger.info("Request to list all products...")
+        products = Product.all()
     return jsonify([product.serialize() for product in products])
 
 
