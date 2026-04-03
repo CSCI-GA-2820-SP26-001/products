@@ -276,6 +276,29 @@ class TestProductService(TestCase):
         self.assertEqual(len(data), 1)
         self.assertEqual(data[0]["category"], "Electronics")
 
+    def test_list_products_category_empty_or_whitespace_lists_all(self):
+        """It should list all Products when category is empty or whitespace after strip"""
+        for i in range(2):
+            resp = self.client.post(
+                "/products",
+                json={
+                    "name": f"Item{i}",
+                    "description": "d",
+                    "price": "1.00",
+                    "category": "Electronics",
+                    "available": True,
+                },
+            )
+            self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        resp = self.client.get("/products?category=")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(resp.get_json()), 2)
+
+        resp = self.client.get("/products?category=%20%20")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(resp.get_json()), 2)
+
     def test_get_product_not_found(self):
         """It should return 404 when Product does not exist"""
         resp = self.client.get("/products/999999")
