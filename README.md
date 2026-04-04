@@ -125,9 +125,9 @@ Updates an existing product. Requires `Content-Type: application/json`. The requ
 
 `DELETE /products/{id}`
 
-Deletes a product by its ID.
+Deletes a product by its ID. **Idempotent:** returns `204 No Content` even if the product does not exist (the resource is already absent).
 
-**Response:** `204 No Content` on success, or `404 Not Found` if it does not exist.
+**Response:** `204 No Content` with an empty body.
 
 ### List Products
 
