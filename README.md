@@ -133,9 +133,17 @@ Deletes a product by its ID. **Idempotent:** returns `204 No Content` even if th
 
 `GET /products`
 
-Returns a JSON array of all products.
+Returns a JSON array of products. With no query parameters, all products are returned.
 
-**Response:** `200 OK` with a list of products.
+**Query parameters (optional):**
+
+| Parameter | Description |
+|-----------|-------------|
+| `category` | When present and non-empty after trimming whitespace, only products whose `category` matches this value **case-insensitively** are returned. If the parameter is omitted, empty, or only whitespace, all products are returned. If no products match, the response is an empty array. When `category` appears more than once in the query string, the first value is used. |
+
+**Examples:** `GET /products`, `GET /products?category=Electronics`, `GET /products?category=electronics`
+
+**Response:** `200 OK` with a JSON array of products.
 
 ## Contents
 
