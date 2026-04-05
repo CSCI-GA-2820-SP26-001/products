@@ -22,10 +22,11 @@ TestProduct API Service Test Suite
 import os
 import logging
 from unittest import TestCase
+from unittest.mock import patch
+from werkzeug.exceptions import InternalServerError
 from wsgi import app
 from service.common import status
 from service.models import db, Product
-from service.common.error_handlers import internal_server_error
 from .factories import ProductFactory
 
 DATABASE_URI = os.getenv("DATABASE_URI", "sqlite:///test.db")
@@ -129,10 +130,19 @@ class TestProductService(TestCase):
         self.assertIn("message", data)
         self.assertEqual(data["status"], status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
-    def test_internal_server_error_handler(self):
-        """It should return 500 for internal server error (handler unit check)"""
-        _, status_code = internal_server_error(Exception("server error"))
-        self.assertEqual(status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+    def test_get_products_internal_server_error_returns_json(self):
+        """It should return 500 JSON when listing products hits an unexpected error"""
+        with patch(
+            "service.routes.Product.all",
+            side_effect=InternalServerError(description="server error"),
+        ):
+            resp = self.client.get("/products")
+        self.assertEqual(resp.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertEqual(resp.content_type, "application/json")
+        data = resp.get_json()
+        self.assertIsNotNone(data)
+        self.assertEqual(data["error"], "Internal Server Error")
+        self.assertEqual(data["status"], status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     ######################################################################
     #  P R O D U C T   R O U T E   T E S T   C A S E S
@@ -233,6 +243,110 @@ class TestProductService(TestCase):
 
         data = resp.get_json()
         self.assertEqual(len(data), 3)
+
+    def test_list_products_by_category(self):
+        """It should list only Products matching the category query param"""
+        for name, cat in [("Phone", "Electronics"), ("Shirt", "Clothing")]:
+            resp = self.client.post(
+                "/products",
+                json={
+                    "name": name,
+                    "description": "d",
+                    "price": "9.99",
+                    "category": cat,
+                    "available": True,
+                },
+            )
+            self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        resp = self.client.get("/products?category=Electronics")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["name"], "Phone")
+        self.assertEqual(data[0]["category"], "Electronics")
+
+    def test_list_products_category_filter_case_insensitive(self):
+        """It should match category case-insensitively"""
+        resp = self.client.post(
+            "/products",
+            json={
+                "name": "Cam",
+                "description": "d",
+                "price": "1.00",
+                "category": "Electronics",
+                "available": True,
+            },
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        resp = self.client.get("/products?category=electronics")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["category"], "Electronics")
+
+    def test_list_products_category_empty_or_whitespace_lists_all(self):
+        """It should list all Products when category is empty or whitespace after strip"""
+        for i in range(2):
+            resp = self.client.post(
+                "/products",
+                json={
+                    "name": f"Item{i}",
+                    "description": "d",
+                    "price": "1.00",
+                    "category": "Electronics",
+                    "available": True,
+                },
+            )
+            self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        resp = self.client.get("/products?category=")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(resp.get_json()), 2)
+
+        resp = self.client.get("/products?category=%20%20")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(resp.get_json()), 2)
+
+    def test_list_products_category_duplicate_query_uses_first(self):
+        """It should use the first category value when the key is repeated"""
+        for name, cat in [("A", "Electronics"), ("B", "Clothing")]:
+            resp = self.client.post(
+                "/products",
+                json={
+                    "name": name,
+                    "description": "d",
+                    "price": "1.00",
+                    "category": cat,
+                    "available": True,
+                },
+            )
+            self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        resp = self.client.get("/products?category=Electronics&category=Clothing")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["name"], "A")
+
+    def test_list_products_category_no_match_returns_empty_list(self):
+        """It should return 200 with an empty list when no Products match category"""
+        resp = self.client.post(
+            "/products",
+            json={
+                "name": "Thing",
+                "description": "d",
+                "price": "1.00",
+                "category": "Electronics",
+                "available": True,
+            },
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        resp = self.client.get("/products?category=Books")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.get_json(), [])
 
     def test_get_product_not_found(self):
         """It should return 404 when Product does not exist"""
