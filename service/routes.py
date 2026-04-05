@@ -20,7 +20,7 @@ YourResourceModel Service
 This service implements a REST API that allows you to Create, Read, Update
 and Delete YourResourceModel
 """
-
+from decimal import Decimal, InvalidOperation
 from flask import jsonify, request, url_for, abort
 from flask import current_app as app  # Import Flask application
 from service.models import Product
@@ -121,14 +121,42 @@ def update_product(product_id):
 def list_products():
     """List products, optionally filtered by category (case-insensitive)."""
     category = request.args.get("category")
+    minimum_price = request.args.get("minimum_price")
+    maximum_price = request.args.get("maximum_price")
+
     if category is not None:
         category = category.strip()
+    if minimum_price is not None:
+        minimum_price = minimum_price.strip()
+    if maximum_price is not None:
+        maximum_price = maximum_price.strip()
+
     if category:
         app.logger.info("Request to list products with category [%s]...", category)
         products = Product.find_by_category(category)
+
+    elif minimum_price or maximum_price:
+        app.logger.info(
+            "Request to list products with minimum_price [%s] and maximum_price [%s]...",
+            minimum_price,
+            maximum_price,
+        )
+
+        try:
+            min_price = Decimal(minimum_price) if minimum_price else None
+            max_price = Decimal(maximum_price) if maximum_price else None
+        except InvalidOperation:
+            abort(
+                status.HTTP_400_BAD_REQUEST,
+                "minimum_price and maximum_price must be valid decimal numbers",
+            )
+
+        products = Product.find_by_price_range(min_price, max_price)
+
     else:
         app.logger.info("Request to list all products...")
         products = Product.all()
+
     return jsonify([product.serialize() for product in products])
 
 

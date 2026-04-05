@@ -149,3 +149,16 @@ class Product(db.Model):
         return (
             cls.query.filter(func.lower(cls.category) == category.lower()).all()
         )
+
+    @classmethod
+    def find_by_price_range(cls, minimum_price=None, maximum_price=None):
+        """Returns all products within a price range"""
+        query = cls.query
+
+        if minimum_price is not None:
+            query = query.filter(cls.price >= minimum_price)
+
+        if maximum_price is not None:
+            query = query.filter(cls.price <= maximum_price)
+
+        return query.all()
