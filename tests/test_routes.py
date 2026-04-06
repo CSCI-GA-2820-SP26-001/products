@@ -19,6 +19,7 @@ TestProduct API Service Test Suite
 """
 
 # pylint: disable=duplicate-code
+from decimal import Decimal
 import os
 import logging
 from unittest import TestCase
@@ -478,3 +479,127 @@ class TestProductService(TestCase):
         data = resp.get_json()
         self.assertIsNotNone(data)
         self.assertEqual(data["error"], "Not Found")
+
+    def test_query_products_by_price_range(self):
+        """It should list only Products within the given price range"""
+        product1 = Product(
+            name="Cheap Item",
+            description="Cheap",
+            category="Electronics",
+            price=Decimal("9.99"),
+            available=True,
+        )
+        product2 = Product(
+            name="Mid Item",
+            description="Mid",
+            category="Electronics",
+            price=Decimal("29.99"),
+            available=True,
+        )
+        product3 = Product(
+            name="Expensive Item",
+            description="Expensive",
+            category="Electronics",
+            price=Decimal("99.99"),
+            available=True,
+        )
+        product1.create()
+        product2.create()
+        product3.create()
+
+        response = self.client.get(
+            "/products?minimum_price=10&maximum_price=50",
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["name"], "Mid Item")
+
+    def test_query_products_by_minimum_price_only(self):
+        """It should list Products greater than or equal to minimum_price"""
+        product1 = Product(
+            name="Cheap Item",
+            description="Cheap",
+            category="Electronics",
+            price=Decimal("9.99"),
+            available=True,
+        )
+        product2 = Product(
+            name="Mid Item",
+            description="Mid",
+            category="Electronics",
+            price=Decimal("29.99"),
+            available=True,
+        )
+        product1.create()
+        product2.create()
+
+        response = self.client.get(
+            "/products?minimum_price=10",
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["name"], "Mid Item")
+
+    def test_query_products_by_maximum_price_only(self):
+        """It should list Products less than or equal to maximum_price"""
+        product1 = Product(
+            name="Cheap Item",
+            description="Cheap",
+            category="Electronics",
+            price=Decimal("9.99"),
+            available=True,
+        )
+        product2 = Product(
+            name="Expensive Item",
+            description="Expensive",
+            category="Electronics",
+            price=Decimal("99.99"),
+            available=True,
+        )
+        product1.create()
+        product2.create()
+
+        response = self.client.get(
+            "/products?maximum_price=50",
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["name"], "Cheap Item")
+
+    def test_query_products_by_price_range_no_matches(self):
+        """It should return an empty list when no Products match the range"""
+        product = Product(
+            name="Expensive Item",
+            description="Expensive",
+            category="Electronics",
+            price=Decimal("99.99"),
+            available=True,
+        )
+        product.create()
+
+        response = self.client.get(
+            "/products?minimum_price=10&maximum_price=50",
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertEqual(len(data), 0)
+
+    def test_query_products_by_price_range_invalid_input(self):
+        """It should return 400 for invalid price query values"""
+        response = self.client.get(
+            "/products?minimum_price=abc&maximum_price=50",
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
