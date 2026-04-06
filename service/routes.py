@@ -120,10 +120,13 @@ def update_product(product_id):
 @app.route("/products", methods=["GET"])
 def list_products():
     """List products, optionally filtered by category (case-insensitive)."""
+    name = request.args.get("name")
     category = request.args.get("category")
     minimum_price = request.args.get("minimum_price")
     maximum_price = request.args.get("maximum_price")
 
+    if name is not None:
+        name = name.strip()
     if category is not None:
         category = category.strip()
     if minimum_price is not None:
@@ -131,7 +134,11 @@ def list_products():
     if maximum_price is not None:
         maximum_price = maximum_price.strip()
 
-    if category:
+    if name:
+        app.logger.info("Request to list products with name [%s]...", name)
+        products = Product.find_by_name(name).all()
+
+    elif category:
         app.logger.info("Request to list products with category [%s]...", category)
         products = Product.find_by_category(category)
 
