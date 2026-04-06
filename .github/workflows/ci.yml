@@ -34,7 +34,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       - name: Install dependencies
         run: |
@@ -53,7 +53,7 @@ jobs:
 
       - name: Run tests with pytest
         run: |
-          pytest --pspec --cov=service --cov-fail-under=95 --disable-warnings
+          pytest --pspec --cov=service --cov-fail-under=95 --cov-report=xml:coverage.xml --disable-warnings
         env:
           DATABASE_URI: "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
           RETRY_COUNT: "1"
@@ -62,3 +62,4 @@ jobs:
         uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+          files: coverage.xml
