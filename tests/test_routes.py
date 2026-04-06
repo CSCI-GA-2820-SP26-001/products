@@ -595,6 +595,57 @@ class TestProductService(TestCase):
         data = response.get_json()
         self.assertEqual(len(data), 0)
 
+    def test_list_products_by_availability_true(self):
+        """It should return only available products when ?available=true"""
+        for name, avail in [("In Stock", True), ("Out of Stock", False)]:
+            resp = self.client.post(
+                "/products",
+                json={
+                    "name": name,
+                    "description": "d",
+                    "price": "9.99",
+                    "category": "Electronics",
+                    "available": avail,
+                },
+            )
+            self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        resp = self.client.get("/products?available=true")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["name"], "In Stock")
+        self.assertTrue(data[0]["available"])
+
+    def test_list_products_by_availability_false(self):
+        """It should return only unavailable products when ?available=false"""
+        for name, avail in [("In Stock", True), ("Out of Stock", False)]:
+            resp = self.client.post(
+                "/products",
+                json={
+                    "name": name,
+                    "description": "d",
+                    "price": "9.99",
+                    "category": "Electronics",
+                    "available": avail,
+                },
+            )
+            self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        resp = self.client.get("/products?available=false")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["name"], "Out of Stock")
+        self.assertFalse(data[0]["available"])
+
+    def test_list_products_by_availability_invalid_value(self):
+        """It should return 400 for an invalid ?available value"""
+        resp = self.client.get("/products?available=maybe")
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        data = resp.get_json()
+        self.assertEqual(data["error"], "Bad Request")
+
     def test_query_products_by_price_range_invalid_input(self):
         """It should return 400 for invalid price query values"""
         response = self.client.get(

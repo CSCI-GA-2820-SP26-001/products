@@ -120,10 +120,13 @@ def update_product(product_id):
 @app.route("/products", methods=["GET"])
 def list_products():
     """List products, optionally filtered by category (case-insensitive)."""
+    available = request.args.get("available")
     category = request.args.get("category")
     minimum_price = request.args.get("minimum_price")
     maximum_price = request.args.get("maximum_price")
 
+    if available is not None:
+        available = available.strip().lower()
     if category is not None:
         category = category.strip()
     if minimum_price is not None:
@@ -131,7 +134,16 @@ def list_products():
     if maximum_price is not None:
         maximum_price = maximum_price.strip()
 
-    if category:
+    if available is not None and available != "":
+        if available not in ("true", "false"):
+            abort(
+                status.HTTP_400_BAD_REQUEST,
+                "available must be 'true' or 'false'",
+            )
+        app.logger.info("Request to list products with available [%s]...", available)
+        products = Product.find_by_availability(available == "true")
+
+    elif category:
         app.logger.info("Request to list products with category [%s]...", category)
         products = Product.find_by_category(category)
 

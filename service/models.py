@@ -139,6 +139,16 @@ class Product(db.Model):
         return cls.query.filter(cls.name == name)
 
     @classmethod
+    def find_by_availability(cls, available):
+        """Returns all Products with the given availability
+
+        Args:
+            available (bool): True for available, False for unavailable
+        """
+        logger.info("Processing availability query for %s ...", available)
+        return cls.query.filter(cls.available == available).all()
+
+    @classmethod
     def find_by_category(cls, category):
         """Returns all Products whose category matches case-insensitively.
 
