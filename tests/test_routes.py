@@ -779,4 +779,3 @@ class TestProductService(TestCase):
         """It should return 404 when purchasing a missing product"""
         resp = self.client.put("/products/999999/purchase")
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
-
