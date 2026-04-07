@@ -3,7 +3,7 @@ Test Factory to make fake objects for testing
 """
 
 import factory
-from factory.fuzzy import FuzzyDecimal
+from factory.fuzzy import FuzzyDecimal, FuzzyInteger
 from service.models import Product
 
 
@@ -21,3 +21,4 @@ class ProductFactory(factory.Factory):
     price = FuzzyDecimal(1.00, 999.99, precision=2)
     category = factory.Faker("word")
     available = factory.Faker("boolean")
+    stock = FuzzyInteger(1, 500)
