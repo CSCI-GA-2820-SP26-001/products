@@ -195,6 +195,19 @@ class TestProductModel(TestCase):
         product = Product()
         self.assertRaises(DataValidationError, product.deserialize, data)
 
+    def test_deserialize_non_integer_stock_raises_error(self):
+        """It should reject non-integer stock values"""
+        data = {
+            "name": "Widget",
+            "description": "x",
+            "price": "1.00",
+            "category": "c",
+            "available": True,
+            "stock": "not-an-int",
+        }
+        product = Product()
+        self.assertRaises(DataValidationError, product.deserialize, data)
+
     def test_deserialize_missing_name_raises_error(self):
         """It should raise DataValidationError when name is missing"""
         data = {
