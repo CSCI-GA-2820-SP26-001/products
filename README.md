@@ -77,7 +77,7 @@ Returns basic service information and available paths.
 {
   "name": "Product Catalog Service",
   "version": "1.0",
-  "paths": ["/products", "/products/{id}"]
+  "paths": ["/products", "/products/{id}", "/products/{id}/purchase"]
 }
 ```
 
@@ -96,6 +96,7 @@ Creates a new product. Requires `Content-Type: application/json`.
 | category    | String  | *        | Product category               |
 | description | String  |          | Description (default: "")      |
 | available   | Boolean |          | Availability (default: true)   |
+| stock       | Integer |          | Units in stock (default: 0). If omitted, stock is 0 and `available` is unchanged. If `stock` is sent and is `<= 0`, `available` is set to false. |
 
 **Example:**
 
@@ -126,6 +127,14 @@ Returns a product by its ID.
 Updates an existing product. Requires `Content-Type: application/json`. The request body uses the same fields as Create.
 
 **Response:** `200 OK` with the updated product, or `404 Not Found` if it does not exist.
+
+### Purchase a Product
+
+`PUT /products/{id}/purchase`
+
+Purchases one unit (decrements stock by 1). No request body is required.
+
+**Response:** `200 OK` with the updated product. Returns `409 Conflict` if the product is unavailable or has no stock remaining. Returns `404 Not Found` if the id does not exist. When stock reaches zero after purchase, `available` is set to `false`.
 
 ### Delete a Product
 
