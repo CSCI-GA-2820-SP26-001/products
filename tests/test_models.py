@@ -48,6 +48,8 @@ class TestProductModel(TestCase):
         app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
         app.logger.setLevel(logging.CRITICAL)
         app.app_context().push()
+        db.drop_all()
+        db.create_all()
 
     @classmethod
     def tearDownClass(cls):
@@ -80,6 +82,7 @@ class TestProductModel(TestCase):
         self.assertEqual(data.price, product.price)
         self.assertEqual(data.category, product.category)
         self.assertEqual(data.available, product.available)
+        self.assertEqual(data.stock, product.stock)
 
     def test_read_a_product(self):
         """It should retrieve a Product by its id with all fields correct"""
@@ -95,6 +98,7 @@ class TestProductModel(TestCase):
         self.assertEqual(found.price, product.price)
         self.assertEqual(found.category, product.category)
         self.assertEqual(found.available, product.available)
+        self.assertEqual(found.stock, product.stock)
 
     def test_product_default_available_is_true(self):
         """It should default available to True when not specified"""
@@ -157,6 +161,7 @@ class TestProductModel(TestCase):
         self.assertIn("price", data)
         self.assertIn("category", data)
         self.assertIn("available", data)
+        self.assertIn("stock", data)
 
     def test_deserialize_a_product(self):
         """It should deserialize a Product from a dictionary"""
@@ -166,6 +171,7 @@ class TestProductModel(TestCase):
             "price": "19.99",
             "category": "gadgets",
             "available": True,
+            "stock": 10,
         }
         product = Product()
         product.deserialize(data)
@@ -174,6 +180,20 @@ class TestProductModel(TestCase):
         self.assertEqual(product.price, Decimal("19.99"))
         self.assertEqual(product.category, "gadgets")
         self.assertTrue(product.available)
+        self.assertEqual(product.stock, 10)
+
+    def test_deserialize_negative_stock_raises_error(self):
+        """It should reject negative stock values"""
+        data = {
+            "name": "Widget",
+            "description": "x",
+            "price": "1.00",
+            "category": "c",
+            "available": True,
+            "stock": -1,
+        }
+        product = Product()
+        self.assertRaises(DataValidationError, product.deserialize, data)
 
     def test_deserialize_missing_name_raises_error(self):
         """It should raise DataValidationError when name is missing"""
