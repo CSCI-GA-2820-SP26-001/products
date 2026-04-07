@@ -139,6 +139,16 @@ class Product(db.Model):
         return cls.query.filter(cls.name == name)
 
     @classmethod
+    def find_by_availability(cls, available):
+        """Returns all Products with the given availability
+
+        Args:
+            available (bool): True for available, False for unavailable
+        """
+        logger.info("Processing availability query for %s ...", available)
+        return cls.query.filter(cls.available == available).all()
+
+    @classmethod
     def find_by_category(cls, category):
         """Returns all Products whose category matches case-insensitively.
 
@@ -149,3 +159,16 @@ class Product(db.Model):
         return (
             cls.query.filter(func.lower(cls.category) == category.lower()).all()
         )
+
+    @classmethod
+    def find_by_price_range(cls, minimum_price=None, maximum_price=None):
+        """Returns all products within a price range"""
+        query = cls.query
+
+        if minimum_price is not None:
+            query = query.filter(cls.price >= minimum_price)
+
+        if maximum_price is not None:
+            query = query.filter(cls.price <= maximum_price)
+
+        return query.all()

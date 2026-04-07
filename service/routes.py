@@ -20,7 +20,7 @@ YourResourceModel Service
 This service implements a REST API that allows you to Create, Read, Update
 and Delete YourResourceModel
 """
-
+from decimal import Decimal, InvalidOperation
 from flask import jsonify, request, url_for, abort
 from flask import current_app as app  # Import Flask application
 from service.models import Product
@@ -117,18 +117,57 @@ def update_product(product_id):
 ############################################################
 # List products
 ############################################################
-@app.route("/products", methods=["GET"])
-def list_products():
-    """List products, optionally filtered by category (case-insensitive)."""
-    category = request.args.get("category")
-    if category is not None:
-        category = category.strip()
+def _filter_products(name, available, category, minimum_price, maximum_price):
+    """Return a filtered list of products based on the provided query parameters."""
+    if available is not None:
+        app.logger.info("Request to list products with available [%s]...", available)
+        return Product.find_by_availability(available)
+
+    if name:
+        app.logger.info("Request to list products with name [%s]...", name)
+        return Product.find_by_name(name).all()
+
     if category:
         app.logger.info("Request to list products with category [%s]...", category)
-        products = Product.find_by_category(category)
-    else:
-        app.logger.info("Request to list all products...")
-        products = Product.all()
+        return Product.find_by_category(category)
+
+    if minimum_price or maximum_price:
+        app.logger.info(
+            "Request to list products with minimum_price [%s] and maximum_price [%s]...",
+            minimum_price,
+            maximum_price,
+        )
+        try:
+            min_price = Decimal(minimum_price) if minimum_price else None
+            max_price = Decimal(maximum_price) if maximum_price else None
+        except InvalidOperation:
+            abort(
+                status.HTTP_400_BAD_REQUEST,
+                "minimum_price and maximum_price must be valid decimal numbers",
+            )
+        return Product.find_by_price_range(min_price, max_price)
+
+    app.logger.info("Request to list all products...")
+    return Product.all()
+
+
+@app.route("/products", methods=["GET"])
+def list_products():
+    """List products, optionally filtered by available, name, category, or price range."""
+    available_raw = request.args.get("available")
+    name = request.args.get("name", "").strip() or None
+    category = request.args.get("category", "").strip() or None
+    minimum_price = request.args.get("minimum_price", "").strip() or None
+    maximum_price = request.args.get("maximum_price", "").strip() or None
+
+    available = None
+    if available_raw is not None and available_raw.strip():
+        value = available_raw.strip().lower()
+        if value not in ("true", "false"):
+            abort(status.HTTP_400_BAD_REQUEST, "available must be 'true' or 'false'")
+        available = value == "true"
+
+    products = _filter_products(name, available, category, minimum_price, maximum_price)
     return jsonify([product.serialize() for product in products])
 
 
