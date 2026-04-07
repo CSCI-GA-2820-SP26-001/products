@@ -49,6 +49,8 @@ class TestProductService(TestCase):
         app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
         app.logger.setLevel(logging.CRITICAL)
         app.app_context().push()
+        db.drop_all()
+        db.create_all()
 
     @classmethod
     def tearDownClass(cls):
@@ -166,6 +168,7 @@ class TestProductService(TestCase):
         self.assertEqual(data["price"], payload["price"])
         self.assertEqual(data["category"], payload["category"])
         self.assertEqual(data["available"], payload["available"])
+        self.assertEqual(data["stock"], payload["stock"])
 
     def test_create_product_missing_required_field(self):
         """It should return 400 for missing required fields"""
@@ -228,6 +231,7 @@ class TestProductService(TestCase):
         self.assertEqual(data["price"], payload["price"])
         self.assertEqual(data["category"], payload["category"])
         self.assertEqual(data["available"], payload["available"])
+        self.assertEqual(data["stock"], payload["stock"])
 
     def test_list_products(self):
         """It should list all Products"""
@@ -693,3 +697,86 @@ class TestProductService(TestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_purchase_product_success(self):
+        """It should decrement stock and return 200 with updated product"""
+        resp = self.client.post(
+            "/products",
+            json={
+                "name": "Stocked Item",
+                "description": "d",
+                "price": "9.99",
+                "category": "Electronics",
+                "available": True,
+                "stock": 5,
+            },
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        product_id = resp.get_json()["id"]
+
+        pur = self.client.put(f"/products/{product_id}/purchase")
+        self.assertEqual(pur.status_code, status.HTTP_200_OK)
+        data = pur.get_json()
+        self.assertEqual(data["stock"], 4)
+        self.assertTrue(data["available"])
+
+    def test_purchase_product_last_unit_marks_unavailable(self):
+        """It should set unavailable when stock reaches zero after purchase"""
+        resp = self.client.post(
+            "/products",
+            json={
+                "name": "Last One",
+                "description": "d",
+                "price": "1.00",
+                "category": "c",
+                "available": True,
+                "stock": 1,
+            },
+        )
+        product_id = resp.get_json()["id"]
+        pur = self.client.put(f"/products/{product_id}/purchase")
+        self.assertEqual(pur.status_code, status.HTTP_200_OK)
+        data = pur.get_json()
+        self.assertEqual(data["stock"], 0)
+        self.assertFalse(data["available"])
+
+    def test_purchase_product_conflict_when_unavailable(self):
+        """It should return 409 when product is not available"""
+        resp = self.client.post(
+            "/products",
+            json={
+                "name": "Gone",
+                "description": "d",
+                "price": "1.00",
+                "category": "c",
+                "available": False,
+                "stock": 3,
+            },
+        )
+        product_id = resp.get_json()["id"]
+        pur = self.client.put(f"/products/{product_id}/purchase")
+        self.assertEqual(pur.status_code, status.HTTP_409_CONFLICT)
+
+    def test_purchase_product_conflict_when_out_of_stock(self):
+        """It should return 409 when stock is zero"""
+        resp = self.client.post(
+            "/products",
+            json={
+                "name": "Empty",
+                "description": "d",
+                "price": "1.00",
+                "category": "c",
+                "available": True,
+                "stock": 0,
+            },
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        product_id = resp.get_json()["id"]
+        pur = self.client.put(f"/products/{product_id}/purchase")
+        self.assertEqual(pur.status_code, status.HTTP_409_CONFLICT)
+
+    def test_purchase_product_not_found(self):
+        """It should return 404 when purchasing a missing product"""
+        resp = self.client.put("/products/999999/purchase")
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
