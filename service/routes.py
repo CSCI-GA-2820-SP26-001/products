@@ -117,43 +117,26 @@ def update_product(product_id):
 ############################################################
 # List products
 ############################################################
-@app.route("/products", methods=["GET"])
-def list_products():
-    """List products, optionally filtered by category (case-insensitive)."""
-    available = request.args.get("available")
-    category = request.args.get("category")
-    minimum_price = request.args.get("minimum_price")
-    maximum_price = request.args.get("maximum_price")
-
+def _filter_products(name, available, category, minimum_price, maximum_price):
+    """Return a filtered list of products based on the provided query parameters."""
     if available is not None:
-        available = available.strip().lower()
-    if category is not None:
-        category = category.strip()
-    if minimum_price is not None:
-        minimum_price = minimum_price.strip()
-    if maximum_price is not None:
-        maximum_price = maximum_price.strip()
-
-    if available is not None and available != "":
-        if available not in ("true", "false"):
-            abort(
-                status.HTTP_400_BAD_REQUEST,
-                "available must be 'true' or 'false'",
-            )
         app.logger.info("Request to list products with available [%s]...", available)
-        products = Product.find_by_availability(available == "true")
+        return Product.find_by_availability(available)
 
-    elif category:
+    if name:
+        app.logger.info("Request to list products with name [%s]...", name)
+        return Product.find_by_name(name).all()
+
+    if category:
         app.logger.info("Request to list products with category [%s]...", category)
-        products = Product.find_by_category(category)
+        return Product.find_by_category(category)
 
-    elif minimum_price or maximum_price:
+    if minimum_price or maximum_price:
         app.logger.info(
             "Request to list products with minimum_price [%s] and maximum_price [%s]...",
             minimum_price,
             maximum_price,
         )
-
         try:
             min_price = Decimal(minimum_price) if minimum_price else None
             max_price = Decimal(maximum_price) if maximum_price else None
@@ -162,13 +145,29 @@ def list_products():
                 status.HTTP_400_BAD_REQUEST,
                 "minimum_price and maximum_price must be valid decimal numbers",
             )
+        return Product.find_by_price_range(min_price, max_price)
 
-        products = Product.find_by_price_range(min_price, max_price)
+    app.logger.info("Request to list all products...")
+    return Product.all()
 
-    else:
-        app.logger.info("Request to list all products...")
-        products = Product.all()
 
+@app.route("/products", methods=["GET"])
+def list_products():
+    """List products, optionally filtered by available, name, category, or price range."""
+    available_raw = request.args.get("available")
+    name = request.args.get("name", "").strip() or None
+    category = request.args.get("category", "").strip() or None
+    minimum_price = request.args.get("minimum_price", "").strip() or None
+    maximum_price = request.args.get("maximum_price", "").strip() or None
+
+    available = None
+    if available_raw is not None and available_raw.strip():
+        value = available_raw.strip().lower()
+        if value not in ("true", "false"):
+            abort(status.HTTP_400_BAD_REQUEST, "available must be 'true' or 'false'")
+        available = value == "true"
+
+    products = _filter_products(name, available, category, minimum_price, maximum_price)
     return jsonify([product.serialize() for product in products])
 
 

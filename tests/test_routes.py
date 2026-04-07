@@ -595,6 +595,45 @@ class TestProductService(TestCase):
         data = response.get_json()
         self.assertEqual(len(data), 0)
 
+    def test_list_products_by_name(self):
+        """It should list only Products matching the name query param"""
+        for name, cat in [("Wireless Mouse", "Electronics"), ("Keyboard", "Electronics")]:
+            resp = self.client.post(
+                "/products",
+                json={
+                    "name": name,
+                    "description": "d",
+                    "price": "29.99",
+                    "category": cat,
+                    "available": True,
+                },
+            )
+            self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        resp = self.client.get("/products?name=Wireless+Mouse")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["name"], "Wireless Mouse")
+
+    def test_list_products_by_name_no_match_returns_empty_list(self):
+        """It should return 200 with an empty list when no Products match the name"""
+        resp = self.client.post(
+            "/products",
+            json={
+                "name": "Wireless Mouse",
+                "description": "d",
+                "price": "29.99",
+                "category": "Electronics",
+                "available": True,
+            },
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        resp = self.client.get("/products?name=Trackpad")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.get_json(), [])
+
     def test_list_products_by_availability_true(self):
         """It should return only available products when ?available=true"""
         for name, avail in [("In Stock", True), ("Out of Stock", False)]:
