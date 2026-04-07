@@ -33,6 +33,7 @@ class Product(db.Model):
     description = db.Column(db.String(256))
     price = db.Column(db.Numeric(10, 2), nullable=False)
     category = db.Column(db.String(63), nullable=False)
+    stock = db.Column(db.Integer, nullable=False, default=0, server_default="0")
     available = db.Column(db.Boolean, nullable=False, default=True)
 
     def __repr__(self):
@@ -83,6 +84,7 @@ class Product(db.Model):
             "description": self.description,
             "price": str(self.price),
             "category": self.category,
+            "stock": self.stock,
             "available": self.available,
         }
 
@@ -99,6 +101,15 @@ class Product(db.Model):
             self.price = Decimal(str(data["price"]))
             self.category = data["category"]
             self.available = data.get("available", True)
+            if "stock" in data:
+                stock_val = int(data["stock"])
+                if stock_val < 0:
+                    raise DataValidationError("Invalid Product: stock cannot be negative")
+                self.stock = stock_val
+                if self.stock <= 0:
+                    self.available = False
+            else:
+                self.stock = int(data.get("stock", 0))
         except AttributeError as error:
             raise DataValidationError("Invalid attribute: " + str(error)) from error
         except KeyError as error:
@@ -109,6 +120,10 @@ class Product(db.Model):
             raise DataValidationError(
                 "Invalid Product: body of request contained bad or no data "
                 + str(error)
+            ) from error
+        except ValueError as error:
+            raise DataValidationError(
+                "Invalid Product: stock must be a valid integer"
             ) from error
         return self
 
