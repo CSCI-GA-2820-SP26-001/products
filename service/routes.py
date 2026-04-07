@@ -36,7 +36,7 @@ def index():
     return {
         "name": "Product Catalog Service",
         "version": "1.0",
-        "paths": ["/products", "/products/{id}"],
+        "paths": ["/products", "/products/{id}", "/products/{id}/purchase"],
     }, status.HTTP_200_OK
 
 
@@ -83,6 +83,33 @@ def get_product(product_id):
             f"Product with id {product_id} was not found.",
         )
 
+    return jsonify(product.serialize()), status.HTTP_200_OK
+
+
+######################################################################
+# PURCHASE A PRODUCT (decrement stock)
+######################################################################
+@app.route("/products/<int:product_id>/purchase", methods=["PUT"])
+def purchase_product(product_id):
+    """Purchase one unit: decrement stock; unavailable when stock is depleted."""
+    product = Product.find(product_id)
+    if not product:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Product with id {product_id} was not found.",
+        )
+    if not product.available or product.stock <= 0:
+        abort(
+            status.HTTP_409_CONFLICT,
+            "Product is not available for purchase (unavailable or out of stock).",
+        )
+    product.stock -= 1
+    if product.stock <= 0:
+        product.available = False
+    product.update()
+    app.logger.info(
+        "Product [%s] purchased; stock is now [%s]", product_id, product.stock
+    )
     return jsonify(product.serialize()), status.HTTP_200_OK
 
 
