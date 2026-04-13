@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Admin Product Update</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin_product_update.css') }}" />
+  </head>
+  <body>
+    <main class="container">
+      <header class="page-header">
+        <h1>Update Product</h1>
+        <p>Retrieve an existing product, edit fields, and save changes.</p>
+      </header>
+
+      <section class="card">
+        <h2>Retrieve Product</h2>
+        <div class="inline-form">
+          <label for="retrieve-product-id">Product ID</label>
+          <input id="retrieve-product-id" type="number" min="1" placeholder="e.g. 1" />
+          <button id="retrieve-button" type="button">Retrieve</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Edit Details</h2>
+        <form id="update-form">
+          <div class="field-grid">
+            <label for="name">Name</label>
+            <input id="name" name="name" required />
+
+            <label for="description">Description</label>
+            <textarea id="description" name="description" rows="3"></textarea>
+
+            <label for="price">Price</label>
+            <input id="price" name="price" inputmode="decimal" required />
+
+            <label for="category">Category</label>
+            <input id="category" name="category" required />
+
+            <label for="stock">Stock Quantity</label>
+            <input id="stock" name="stock" type="number" min="0" required />
+
+            <label for="available">Availability</label>
+            <input id="available" name="available" type="checkbox" />
+          </div>
+
+          <div class="actions">
+            <button id="update-button" type="submit" disabled>Update</button>
+          </div>
+        </form>
+      </section>
+
+      <section id="message" class="message" aria-live="polite"></section>
+
+      <section id="updated-product" class="card hidden">
+        <h2>Updated Product Details</h2>
+        <dl id="updated-product-details" class="details"></dl>
+      </section>
+    </main>
+
+    <script src="{{ url_for('static', filename='admin_product_update.js') }}"></script>
+  </body>
+</html>
