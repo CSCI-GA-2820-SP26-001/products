@@ -31,6 +31,15 @@
     updatedProductCard.classList.add("hidden");
   }
 
+  function clearForm() {
+    nameInput.value = "";
+    descriptionInput.value = "";
+    priceInput.value = "";
+    categoryInput.value = "";
+    stockInput.value = "0";
+    availableInput.checked = false;
+  }
+
   function renderDetails(product) {
     const entries = [
       ["ID", product.id],
@@ -67,11 +76,18 @@
   async function retrieveProduct() {
     const productId = parseInt(retrieveInput.value, 10);
     if (!Number.isInteger(productId) || productId <= 0) {
+      currentProductId = null;
+      updateButton.disabled = true;
+      clearDetails();
+      clearForm();
       showMessage("Enter a valid product ID before retrieving.", "error");
       return;
     }
 
+    currentProductId = null;
+    updateButton.disabled = true;
     clearDetails();
+    clearForm();
     showMessage("Retrieving product...", null);
 
     const response = await fetch(`/products/${productId}`, { method: "GET" });
@@ -161,6 +177,10 @@
 
   retrieveButton.addEventListener("click", function onRetrieveClick() {
     retrieveProduct().catch(function onRetrieveError() {
+      currentProductId = null;
+      updateButton.disabled = true;
+      clearDetails();
+      clearForm();
       showMessage("Unexpected error while retrieving the product.", "error");
     });
   });
