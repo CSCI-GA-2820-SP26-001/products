@@ -788,3 +788,10 @@ class TestProductService(TestCase):
         """It should return 404 when purchasing a missing product"""
         resp = self.client.put("/products/999999/purchase")
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_health_endpoint(self):
+        """It should return 200 OK for health check"""
+        response = self.client.get("/health")
+        self.assertEqual(response.status_code, 200)
+        data = response.get_json()
+        self.assertEqual(data["status"], "OK")

@@ -224,3 +224,9 @@ def delete_product(product_id):
     product.delete()
     app.logger.info("Product [%s] deleted", product_id)
     return "", status.HTTP_204_NO_CONTENT
+
+
+@app.route("/health", methods=["GET"])
+def health_check():
+    """Health check endpoint"""
+    return {"status": "OK"}, 200
