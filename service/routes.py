@@ -21,7 +21,7 @@ This service implements a REST API that allows you to Create, Read, Update
 and Delete YourResourceModel
 """
 from decimal import Decimal, InvalidOperation
-from flask import jsonify, request, url_for, abort
+from flask import jsonify, request, url_for, abort, render_template
 from flask import current_app as app  # Import Flask application
 from service.models import Product
 from service.common import status  # HTTP Status Codes
@@ -38,6 +38,15 @@ def index():
         "version": "1.0",
         "paths": ["/products", "/products/{id}", "/products/{id}/purchase"],
     }, status.HTTP_200_OK
+
+
+######################################################################
+# ADMIN UI
+######################################################################
+@app.route("/admin/products/update", methods=["GET"])
+def admin_update_product_page():
+    """Render the admin UI for retrieving and updating products."""
+    return render_template("admin_product_update.html"), status.HTTP_200_OK
 
 
 ######################################################################

@@ -21,6 +21,7 @@ It supports the following operations:
 - Update a product
 - Delete a product
 - List all products
+- Use a simple admin UI page for product update workflows
 
 ## Product Data Model
 
@@ -44,6 +45,11 @@ make run
 ```
 
 The service will be available at `http://localhost:8080`.
+
+Admin UI page:
+
+- `http://localhost:8080/admin/products/update`
+- Allows store managers to retrieve a product by id, edit fields, and submit updates.
 
 ## Running Tests
 
@@ -127,6 +133,15 @@ Returns a product by its ID.
 Updates an existing product. Requires `Content-Type: application/json`. The request body uses the same fields as Create.
 
 **Response:** `200 OK` with the updated product, or `404 Not Found` if it does not exist.
+
+### Admin Product Update UI
+
+`GET /admin/products/update`
+
+Renders a lightweight admin page that supports:
+- retrieving an existing product by id
+- editing `name`, `description`, `price`, `category`, `stock`, and `available`
+- submitting updates and viewing success/error messages with updated details
 
 ### Purchase a Product
 

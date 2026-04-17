@@ -84,6 +84,15 @@ class TestProductService(TestCase):
         self.assertEqual(data["version"], "1.0")
         self.assertIsInstance(data["paths"], list)
 
+    def test_admin_update_product_page(self):
+        """It should render the admin update product UI page"""
+        response = self.client.get("/admin/products/update")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("text/html", response.content_type)
+        page = response.get_data(as_text=True)
+        self.assertIn("Update Product", page)
+        self.assertIn("Retrieve Product", page)
+
     def test_404_not_found(self):
         """It should return 404 JSON for an unknown route"""
         resp = self.client.get("/nonexistent-route")
