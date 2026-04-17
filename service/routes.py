@@ -49,6 +49,12 @@ def admin_update_product_page():
     return render_template("admin_product_update.html"), status.HTTP_200_OK
 
 
+@app.route("/admin/products/delete", methods=["GET"])
+def admin_delete_product_page():
+    """Render the admin UI for deleting products."""
+    return render_template("admin_product_delete.html"), status.HTTP_200_OK
+
+
 ######################################################################
 #  R E S T   A P I   E N D P O I N T S
 ######################################################################

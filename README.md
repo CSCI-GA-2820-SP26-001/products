@@ -46,10 +46,10 @@ make run
 
 The service will be available at `http://localhost:8080`.
 
-Admin UI page:
+Admin UI pages:
 
-- `http://localhost:8080/admin/products/update`
-- Allows store managers to retrieve a product by id, edit fields, and submit updates.
+- `http://localhost:8080/admin/products/update` — Retrieve a product by id, edit fields, and submit updates.
+- `http://localhost:8080/admin/products/delete` — Delete a product by id.
 
 ## Running Tests
 
@@ -133,6 +133,15 @@ Returns a product by its ID.
 Updates an existing product. Requires `Content-Type: application/json`. The request body uses the same fields as Create.
 
 **Response:** `200 OK` with the updated product, or `404 Not Found` if it does not exist.
+
+### Admin Product Delete UI
+
+`GET /admin/products/delete`
+
+Renders a lightweight admin page that supports:
+- entering a product id
+- deleting the product and viewing a success message
+- displaying an error if the product does not exist
 
 ### Admin Product Update UI
 

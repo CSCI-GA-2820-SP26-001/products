@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Admin Product Delete</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin_product_delete.css') }}" />
+  </head>
+  <body>
+    <main class="container">
+      <header class="page-header">
+        <h1>Delete Product</h1>
+        <p>Enter a product ID and press Delete to remove it from the catalog.</p>
+      </header>
+
+      <section class="card">
+        <h2>Delete Product</h2>
+        <div class="inline-form">
+          <label for="delete-product-id">Product ID</label>
+          <input id="delete-product-id" type="number" min="1" placeholder="e.g. 1" />
+          <button id="delete-button" type="button">Delete</button>
+        </div>
+      </section>
+
+      <section id="message" class="message" aria-live="polite"></section>
+    </main>
+
+    <script src="{{ url_for('static', filename='admin_product_delete.js') }}"></script>
+  </body>
+</html>

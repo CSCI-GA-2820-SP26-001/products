@@ -93,6 +93,14 @@ class TestProductService(TestCase):
         self.assertIn("Update Product", page)
         self.assertIn("Retrieve Product", page)
 
+    def test_admin_delete_product_page(self):
+        """It should render the admin delete product UI page"""
+        response = self.client.get("/admin/products/delete")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("text/html", response.content_type)
+        page = response.get_data(as_text=True)
+        self.assertIn("Delete Product", page)
+
     def test_404_not_found(self):
         """It should return 404 JSON for an unknown route"""
         resp = self.client.get("/nonexistent-route")
