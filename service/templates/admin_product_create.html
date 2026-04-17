@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Admin Product Create</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin_product_create.css') }}" />
+  </head>
+  <body>
+    <main class="container">
+      <header class="page-header">
+        <h1>Create Product</h1>
+        <p>Fill in the product details and submit to add a new product to the catalog.</p>
+      </header>
+
+      <section class="card">
+        <h2>Product Details</h2>
+        <form id="create-form">
+          <div class="field-grid">
+            <label for="name">Name</label>
+            <input id="name" name="name" required />
+
+            <label for="description">Description</label>
+            <textarea id="description" name="description" rows="3"></textarea>
+
+            <label for="price">Price</label>
+            <input id="price" name="price" inputmode="decimal" required />
+
+            <label for="category">Category</label>
+            <input id="category" name="category" required />
+
+            <label for="stock">Stock Quantity</label>
+            <input id="stock" name="stock" type="number" min="0" value="0" required />
+
+            <label for="available">Availability</label>
+            <input id="available" name="available" type="checkbox" />
+          </div>
+
+          <div class="actions">
+            <button id="create-button" type="submit">Create</button>
+          </div>
+        </form>
+      </section>
+
+      <section id="message" class="message" aria-live="polite"></section>
+
+      <section id="created-product" class="card hidden">
+        <h2>Created Product Details</h2>
+        <dl id="created-product-details" class="details"></dl>
+      </section>
+    </main>
+
+    <script src="{{ url_for('static', filename='admin_product_create.js') }}"></script>
+  </body>
+</html>
