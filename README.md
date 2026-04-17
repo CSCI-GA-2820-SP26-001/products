@@ -48,6 +48,7 @@ The service will be available at `http://localhost:8080`.
 
 Admin UI pages:
 
+- `http://localhost:8080/admin/products/create` — Add a new product to the catalog.
 - `http://localhost:8080/admin/products/update` — Retrieve a product by id, edit fields, and submit updates.
 - `http://localhost:8080/admin/products/delete` — Delete a product by id.
 
@@ -133,6 +134,15 @@ Returns a product by its ID.
 Updates an existing product. Requires `Content-Type: application/json`. The request body uses the same fields as Create.
 
 **Response:** `200 OK` with the updated product, or `404 Not Found` if it does not exist.
+
+### Admin Product Create UI
+
+`GET /admin/products/create`
+
+Renders a lightweight admin page that supports:
+- filling in `name`, `description`, `price`, `category`, `stock`, and `available`
+- submitting the form to create a new product
+- viewing success/error messages with the created product details
 
 ### Admin Product Delete UI
 

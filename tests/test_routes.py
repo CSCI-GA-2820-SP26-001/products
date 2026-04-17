@@ -93,6 +93,15 @@ class TestProductService(TestCase):
         self.assertIn("Update Product", page)
         self.assertIn("Retrieve Product", page)
 
+    def test_admin_create_product_page(self):
+        """It should render the admin create product UI page"""
+        response = self.client.get("/admin/products/create")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("text/html", response.content_type)
+        page = response.get_data(as_text=True)
+        self.assertIn("Create Product", page)
+        self.assertIn("Product Details", page)
+
     def test_admin_delete_product_page(self):
         """It should render the admin delete product UI page"""
         response = self.client.get("/admin/products/delete")
