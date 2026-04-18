@@ -1,6 +1,6 @@
 # These can be overidden with env vars.
 REGISTRY ?= cluster-registry:5000
-IMAGE_NAME ?= petshop
+IMAGE_NAME ?= products
 IMAGE_TAG ?= 1.0
 IMAGE ?= $(REGISTRY)/$(IMAGE_NAME):$(IMAGE_TAG)
 POSTGRES_IMAGE ?= postgres:15
