@@ -78,7 +78,33 @@ in-cluster `cluster-registry:5000` so that `kubectl apply` always pulls via a
 registry (this avoids a known containerd/k3d issue with `k3d image import`
 and multi-manifest attestation digests).
 
+### One-time local setup
+
+The cluster registry is plain HTTP, which the local Docker daemon refuses by
+default. Two one-time machine-level tweaks are required before `make push` /
+`make seed-postgres` work. `make preflight` validates both and prints the
+exact fix command if something is missing.
+
+1. Let the local docker CLI resolve `cluster-registry` to the loopback address:
+
+   ```bash
+   echo "127.0.0.1 cluster-registry" | sudo tee -a /etc/hosts
+   ```
+
+2. Tell the docker daemon that `cluster-registry:5000` is an insecure
+   (plain-HTTP) registry, then restart docker:
+
+   ```bash
+   sudo tee /etc/docker/daemon.json <<'EOF'
+   {"insecure-registries": ["cluster-registry:5000"]}
+   EOF
+   sudo systemctl restart docker    # or restart Docker Desktop
+   ```
+
+### Deploy sequence
+
 ```bash
+make preflight        # sanity-check the two host-level tweaks above
 make cluster          # create K3D cluster with load balancer + registry
 make seed-postgres    # pull postgres:15 and push it to cluster-registry
 make build            # build the products image
