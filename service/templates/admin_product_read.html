@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Admin Product Read</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin_product_read.css') }}" />
+  </head>
+  <body>
+    <main class="container">
+      <header class="page-header">
+        <h1>Read Product</h1>
+        <p>Retrieve a specific product by id to view its details.</p>
+      </header>
+
+      <section class="card">
+        <h2>Retrieve Product</h2>
+        <div class="inline-form">
+          <label for="retrieve-product-id">Product ID</label>
+          <input id="retrieve-product-id" type="number" min="1" placeholder="e.g. 1" />
+          <button id="retrieve-button" type="button">Retrieve</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Product Details</h2>
+        <form id="read-form">
+          <div class="field-grid">
+            <label for="name">Name</label>
+            <input id="name" name="name" readonly />
+
+            <label for="description">Description</label>
+            <textarea id="description" name="description" rows="3" readonly></textarea>
+
+            <label for="price">Price</label>
+            <input id="price" name="price" readonly />
+
+            <label for="category">Category</label>
+            <input id="category" name="category" readonly />
+
+            <label for="stock">Stock Quantity</label>
+            <input id="stock" name="stock" type="number" readonly />
+
+            <label for="available">Availability</label>
+            <input id="available" name="available" type="checkbox" disabled />
+          </div>
+        </form>
+      </section>
+
+      <section id="message" class="message" aria-live="polite"></section>
+    </main>
+
+    <script src="{{ url_for('static', filename='admin_product_read.js') }}"></script>
+  </body>
+</html>
