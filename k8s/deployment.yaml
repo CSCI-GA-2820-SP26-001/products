@@ -46,7 +46,7 @@ spec:
                   name: postgres-secret
                   key: POSTGRES_DB
             - name: DATABASE_URI
-              value: postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@postgres:5432/$(POSTGRES_DB)
+              value: postgresql+psycopg://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@postgres:5432/$(POSTGRES_DB)
           readinessProbe:
             httpGet:
               path: /health

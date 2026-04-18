@@ -70,6 +70,27 @@ Check code style against PEP8:
 make lint
 ```
 
+## Local Kubernetes Deployment
+
+Deploy the full stack (products service + PostgreSQL) to a local K3D cluster.
+Both images — the products container and `postgres:15` — are served from the
+in-cluster `cluster-registry:5000` so that `kubectl apply` always pulls via a
+registry (this avoids a known containerd/k3d issue with `k3d image import`
+and multi-manifest attestation digests).
+
+```bash
+make cluster          # create K3D cluster with load balancer + registry
+make seed-postgres    # pull postgres:15 and push it to cluster-registry
+make build            # build the products image
+make push             # push the products image to cluster-registry
+make deploy           # kubectl apply -R -f k8s/
+```
+
+Once the pods are ready, the service is reachable through the ingress at
+`http://localhost:8080/` (e.g. `curl http://localhost:8080/health`).
+
+Tear down with `make cluster-rm`.
+
 ## API Endpoints
 
 ### Root Endpoint

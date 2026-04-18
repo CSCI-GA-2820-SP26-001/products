@@ -3,6 +3,7 @@ REGISTRY ?= cluster-registry:5000
 IMAGE_NAME ?= petshop
 IMAGE_TAG ?= 1.0
 IMAGE ?= $(REGISTRY)/$(IMAGE_NAME):$(IMAGE_TAG)
+POSTGRES_IMAGE ?= postgres:15
 PLATFORM ?= "linux/amd64,linux/arm64"
 CLUSTER ?= nyu-devops
 
@@ -62,6 +63,13 @@ cluster: ## Create a K3D Kubernetes cluster with load balancer and registry
 cluster-rm: ## Remove a K3D Kubernetes cluster
 	$(info Removing Kubernetes cluster...)
 	k3d cluster delete nyu-devops
+
+.PHONY: seed-postgres
+seed-postgres: ## Mirror the postgres image into the local cluster-registry
+	$(info Seeding $(POSTGRES_IMAGE) into $(REGISTRY)...)
+	docker pull $(POSTGRES_IMAGE)
+	docker tag $(POSTGRES_IMAGE) $(REGISTRY)/$(POSTGRES_IMAGE)
+	docker push $(REGISTRY)/$(POSTGRES_IMAGE)
 
 .PHONY: deploy
 deploy: ## Deploy the service on local Kubernetes
