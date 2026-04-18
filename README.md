@@ -50,6 +50,7 @@ Admin UI pages:
 
 - `http://localhost:8080/admin/products/create` — Add a new product to the catalog.
 - `http://localhost:8080/admin/products/update` — Retrieve a product by id, edit fields, and submit updates.
+- `http://localhost:8080/admin/products/delete` — Delete a product by id.
 
 ## Running Tests
 
@@ -142,6 +143,15 @@ Renders a lightweight admin page that supports:
 - filling in `name`, `description`, `price`, `category`, `stock`, and `available`
 - submitting the form to create a new product
 - viewing success/error messages with the created product details
+
+### Admin Product Delete UI
+
+`GET /admin/products/delete`
+
+Renders a lightweight admin page that supports:
+- entering a product id
+- deleting the product and viewing a success message
+- displaying an error if the product does not exist
 
 ### Admin Product Update UI
 
