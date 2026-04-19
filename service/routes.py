@@ -36,7 +36,7 @@ def index():
     return {
         "name": "Product Catalog Service",
         "version": "1.0",
-        "paths": ["/products", "/products/{id}", "/products/{id}/purchase"],
+        "paths": ["/products", "/products/{id}", "/products/{id}/purchase", "/health"],
     }, status.HTTP_200_OK
 
 
@@ -247,4 +247,4 @@ def delete_product(product_id):
 @app.route("/health", methods=["GET"])
 def health_check():
     """Health check endpoint"""
-    return {"status": "OK"}, 200
+    return {"status": "OK"}, status.HTTP_200_OK
