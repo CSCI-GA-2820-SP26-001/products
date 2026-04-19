@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Admin Product List</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin_product_list.css') }}" />
+  </head>
+  <body>
+    <main class="container">
+      <header class="page-header">
+        <h1>List Products</h1>
+        <p>View all products in the catalog.</p>
+      </header>
+
+      <section class="card">
+        <h2>Actions</h2>
+        <button id="list-all-button" type="button">List All</button>
+      </section>
+
+      <section id="message" class="message" aria-live="polite"></section>
+
+      <section class="card">
+        <h2>Results</h2>
+        <div id="results-area">
+          <p id="empty-state" class="empty-state">Press "List All" to load products.</p>
+          <table id="products-table" class="products-table" hidden>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Available</th>
+              </tr>
+            </thead>
+            <tbody id="products-tbody"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <script src="{{ url_for('static', filename='admin_product_list.js') }}"></script>
+  </body>
+</html>
