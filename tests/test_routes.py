@@ -127,6 +127,8 @@ class TestProductService(TestCase):
         page = response.get_data(as_text=True)
         self.assertIn("List Products", page)
         self.assertIn("List All", page)
+        self.assertIn("Category", page)
+        self.assertIn("Query", page)
 
     def test_admin_purchase_product_page(self):
         """It should render the admin purchase product UI page"""

@@ -14,3 +14,9 @@ Feature: List products from admin UI
     And I am on the "List Products" admin page
     When I press the "List All" button
     Then I should see a message indicating no products were found
+
+  Scenario: Filter products by category
+    Given products exist in categories "Electronics" and "Clothing"
+    And I am on the "List Products" admin page
+    When I enter "Electronics" in the category field and press the "Query" button
+    Then I should see only products in the "Electronics" category displayed in the results area
