@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Admin Product Purchase</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin_product_purchase.css') }}" />
+  </head>
+  <body>
+    <main class="container">
+      <header class="page-header">
+        <h1>Purchase Product</h1>
+        <p>Purchase one unit of a product and view the updated details.</p>
+      </header>
+
+      <section class="card">
+        <h2>Purchase Action</h2>
+        <div class="inline-form">
+          <label for="purchase-product-id">Product ID</label>
+          <input id="purchase-product-id" type="number" min="1" placeholder="e.g. 1" />
+          <button id="purchase-button" type="button">Purchase</button>
+        </div>
+      </section>
+
+      <section id="message" class="message" aria-live="polite"></section>
+
+      <section id="purchased-product" class="card hidden">
+        <h2>Updated Product Details</h2>
+        <dl id="purchased-product-details" class="details"></dl>
+      </section>
+    </main>
+
+    <script src="{{ url_for('static', filename='admin_product_purchase.js') }}"></script>
+  </body>
+</html>

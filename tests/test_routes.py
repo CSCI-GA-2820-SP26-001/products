@@ -128,6 +128,15 @@ class TestProductService(TestCase):
         self.assertIn("List Products", page)
         self.assertIn("List All", page)
 
+    def test_admin_purchase_product_page(self):
+        """It should render the admin purchase product UI page"""
+        response = self.client.get("/admin/products/purchase")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("text/html", response.content_type)
+        page = response.get_data(as_text=True)
+        self.assertIn("Purchase Product", page)
+        self.assertIn("Purchase Action", page)
+
     def test_404_not_found(self):
         """It should return 404 JSON for an unknown route"""
         resp = self.client.get("/nonexistent-route")
@@ -800,6 +809,8 @@ class TestProductService(TestCase):
         product_id = resp.get_json()["id"]
         pur = self.client.put(f"/products/{product_id}/purchase")
         self.assertEqual(pur.status_code, status.HTTP_409_CONFLICT)
+        data = pur.get_json()
+        self.assertIn("unavailable", data["message"].lower())
 
     def test_purchase_product_conflict_when_out_of_stock(self):
         """It should return 409 when stock is zero"""
@@ -818,6 +829,8 @@ class TestProductService(TestCase):
         product_id = resp.get_json()["id"]
         pur = self.client.put(f"/products/{product_id}/purchase")
         self.assertEqual(pur.status_code, status.HTTP_409_CONFLICT)
+        data = pur.get_json()
+        self.assertIn("out of stock", data["message"].lower())
 
     def test_purchase_product_not_found(self):
         """It should return 404 when purchasing a missing product"""
