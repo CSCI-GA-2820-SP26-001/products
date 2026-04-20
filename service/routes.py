@@ -73,6 +73,12 @@ def admin_list_product_page():
     return render_template("admin_product_list.html"), status.HTTP_200_OK
 
 
+@app.route("/admin/products/purchase", methods=["GET"])
+def admin_purchase_product_page():
+    """Render the admin UI for purchasing a product by id."""
+    return render_template("admin_product_purchase.html"), status.HTTP_200_OK
+
+
 ######################################################################
 #  R E S T   A P I   E N D P O I N T S
 ######################################################################
