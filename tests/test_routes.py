@@ -809,6 +809,8 @@ class TestProductService(TestCase):
         product_id = resp.get_json()["id"]
         pur = self.client.put(f"/products/{product_id}/purchase")
         self.assertEqual(pur.status_code, status.HTTP_409_CONFLICT)
+        data = pur.get_json()
+        self.assertIn("unavailable", data["message"].lower())
 
     def test_purchase_product_conflict_when_out_of_stock(self):
         """It should return 409 when stock is zero"""
@@ -827,6 +829,8 @@ class TestProductService(TestCase):
         product_id = resp.get_json()["id"]
         pur = self.client.put(f"/products/{product_id}/purchase")
         self.assertEqual(pur.status_code, status.HTTP_409_CONFLICT)
+        data = pur.get_json()
+        self.assertIn("out of stock", data["message"].lower())
 
     def test_purchase_product_not_found(self):
         """It should return 404 when purchasing a missing product"""

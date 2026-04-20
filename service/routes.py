@@ -137,10 +137,15 @@ def purchase_product(product_id):
             status.HTTP_404_NOT_FOUND,
             f"Product with id {product_id} was not found.",
         )
-    if not product.available or product.stock <= 0:
+    if product.stock <= 0:
         abort(
             status.HTTP_409_CONFLICT,
-            "Product is not available for purchase (unavailable or out of stock).",
+            "Product is out of stock and cannot be purchased.",
+        )
+    if not product.available:
+        abort(
+            status.HTTP_409_CONFLICT,
+            "Product is unavailable and cannot be purchased.",
         )
     product.stock -= 1
     if product.stock <= 0:
