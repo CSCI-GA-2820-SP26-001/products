@@ -1,8 +1,9 @@
 # These can be overidden with env vars.
 REGISTRY ?= cluster-registry:5000
-IMAGE_NAME ?= petshop
+IMAGE_NAME ?= products
 IMAGE_TAG ?= 1.0
 IMAGE ?= $(REGISTRY)/$(IMAGE_NAME):$(IMAGE_TAG)
+POSTGRES_IMAGE ?= postgres:15
 PLATFORM ?= "linux/amd64,linux/arm64"
 CLUSTER ?= nyu-devops
 
@@ -56,12 +57,37 @@ secret: ## Generate a secret hex key
 .PHONY: cluster
 cluster: ## Create a K3D Kubernetes cluster with load balancer and registry
 	$(info Creating Kubernetes cluster $(CLUSTER) with a registry and 2 worker nodes...)
-	k3d cluster create $(CLUSTER) --agents 2 --registry-create cluster-registry:0.0.0.0:5000 --port '8080:80@loadbalancer'
+	k3d cluster create --config k3d-config.yaml
+
+.PHONY: preflight
+preflight: ## Verify local machine is configured to push to cluster-registry:5000
+	$(info Checking local preflight requirements...)
+	@getent hosts cluster-registry >/dev/null 2>&1 || { \
+		echo "ERROR: hostname 'cluster-registry' does not resolve locally."; \
+		echo "       Add this line to /etc/hosts (needs sudo):"; \
+		echo "         127.0.0.1 cluster-registry"; \
+		exit 1; \
+	}
+	@docker info 2>/dev/null | grep -q 'cluster-registry:5000' || { \
+		echo "ERROR: docker daemon is missing cluster-registry:5000 from insecure-registries."; \
+		echo "       Write /etc/docker/daemon.json (needs sudo):"; \
+		echo "         {\"insecure-registries\": [\"cluster-registry:5000\"]}"; \
+		echo "       Then: sudo systemctl restart docker   (or restart Docker Desktop)"; \
+		exit 1; \
+	}
+	@echo "Preflight OK: cluster-registry resolves and docker treats it as insecure."
 
 .PHONY: cluster-rm
 cluster-rm: ## Remove a K3D Kubernetes cluster
 	$(info Removing Kubernetes cluster...)
 	k3d cluster delete nyu-devops
+
+.PHONY: seed-postgres
+seed-postgres: preflight ## Mirror the postgres image into the local cluster-registry
+	$(info Seeding $(POSTGRES_IMAGE) into $(REGISTRY)...)
+	docker pull $(POSTGRES_IMAGE)
+	docker tag $(POSTGRES_IMAGE) $(REGISTRY)/$(POSTGRES_IMAGE)
+	docker push $(REGISTRY)/$(POSTGRES_IMAGE)
 
 .PHONY: deploy
 deploy: ## Deploy the service on local Kubernetes
@@ -87,7 +113,7 @@ build:	## Build the project container image for local platform
 	docker build --rm --pull --tag $(IMAGE) .
 
 .PHONY: push
-push:	## Push the image to the container registry
+push: preflight	## Push the image to the container registry
 	$(info Pushing $(IMAGE)...)
 	docker push $(IMAGE)
 

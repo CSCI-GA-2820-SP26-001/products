@@ -1,0 +1,16 @@
+.git
+.github
+.vscode
+.devcontainer
+.pytest_cache
+.coverage
+__pycache__
+*.pyc
+tests
+features
+k8s
+htmlcov
+coverage.xml
+.env
+*.md
+Makefile
