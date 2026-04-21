@@ -47,6 +47,36 @@ button {
   cursor: pointer;
 }
 
+.actions-row {
+  margin-bottom: 1rem;
+}
+
+.query-row {
+  display: grid;
+  grid-template-columns: 100px minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.query-row label {
+  font-weight: 600;
+}
+
+.query-row input {
+  width: 100%;
+  font: inherit;
+  color: inherit;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 0.55rem 0.75rem;
+  background: #ffffff;
+}
+
+.query-row input:focus {
+  outline: 2px solid #93c5fd;
+  outline-offset: 1px;
+}
+
 .message {
   min-height: 1.5rem;
   font-weight: 600;
@@ -86,4 +116,10 @@ button {
 
 .products-table tr:last-child td {
   border-bottom: none;
+}
+
+@media (max-width: 640px) {
+  .query-row {
+    grid-template-columns: 1fr;
+  }
 }
