@@ -289,3 +289,12 @@ Copyright (c) 2016, 2025 [John Rofrano](https://www.linkedin.com/in/JohnRofrano/
 Licensed under the Apache License. See [LICENSE](LICENSE)
 
 This repository is part of the New York University (NYU) masters class: **CSCI-GA.2820-001 DevOps and Agile Methodologies** created and taught by [John Rofrano](https://cs.nyu.edu/~rofrano/), Adjunct Instructor, NYU Courant Institute, Graduate Division, Computer Science, and NYU Stern School of Business.
+
+## Running BDD Tests
+
+This project uses **Behave** and **Selenium** for browser-based BDD testing.
+
+### Install BDD dependencies
+
+```bash
+pipenv install --dev behave selenium
