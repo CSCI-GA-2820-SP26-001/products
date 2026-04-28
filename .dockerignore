@@ -1,7 +1,6 @@
 .git
 .github
 .vscode
-.devcontainer
 .pytest_cache
 .coverage
 __pycache__
