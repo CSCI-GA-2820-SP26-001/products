@@ -293,8 +293,58 @@ This repository is part of the New York University (NYU) masters class: **CSCI-G
 ## Running BDD Tests
 
 This project uses **Behave** and **Selenium** for browser-based BDD testing.
+Every step is **strictly UI-only**: setup, teardown, and assertions all drive
+the admin web pages through Selenium. The BDD suite never makes a direct call
+to the REST API.
 
 ### Install BDD dependencies
 
 ```bash
 pipenv install --dev behave selenium
+```
+
+### Prerequisites
+
+- A running Chrome/Chromium browser. Selenium 4 Manager will fetch a matching
+  `chromedriver` automatically; no manual install is needed.
+- The Flask service must be running and reachable at `BASE_URL`
+  (default `http://localhost:8080`). Start it in a separate terminal:
+
+  ```bash
+  make run
+  ```
+
+### Run the suite
+
+In a second terminal:
+
+```bash
+make bdd            # or: behave
+```
+
+Behave will execute all six product UI feature files plus the environment
+setup feature, opening a headless Chrome window per scenario.
+
+### Configuration
+
+| Env var        | Default                    | Description                                      |
+| -------------- | -------------------------- | ------------------------------------------------ |
+| `BASE_URL`     | `http://localhost:8080`    | Where the running service lives.                 |
+| `WAIT_SECONDS` | `30`                       | Selenium implicit/explicit wait timeout.         |
+
+### Feature files
+
+```
+features/
+├── environment.py            # Selenium driver + UI-only data wipe per scenario
+├── setup_bdd_ui.feature      # Sanity-check the BDD environment
+├── create_product_ui.feature
+├── read_product_ui.feature
+├── update_product_ui.feature
+├── delete_product_ui.feature
+├── list_product_ui.feature   # includes the "filter by category" Query scenario
+├── purchase_product_ui.feature
+└── steps/
+    ├── product_steps.py      # Given/seed steps that drive the Create/Update UI
+    └── web_steps.py          # When/Then steps for all admin pages
+```

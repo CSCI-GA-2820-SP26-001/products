@@ -42,6 +42,11 @@ test: ## Run the unit tests
 	$(info Running tests...)
 	export DATABASE_URI=sqlite:///test.db; export RETRY_COUNT=1; pytest --pspec --cov=service --cov-fail-under=95 --disable-warnings
 
+.PHONY: bdd
+bdd: ## Run BDD tests with Behave (requires the service running on $$BASE_URL)
+	$(info Running BDD tests with Behave + Selenium...)
+	behave
+
 .PHONY: run
 run: ## Run the service
 	$(info Starting service...)
