@@ -97,7 +97,8 @@ seed-postgres: preflight ## Mirror the postgres image into the local cluster-reg
 .PHONY: deploy
 deploy: ## Deploy the service on local Kubernetes
 	$(info Deploying service locally...)
-	kubectl apply -R -f k8s/
+	kubectl apply -f k8s/
+	kubectl apply -f k8s/postgres/
 
 ############################################################
 # COMMANDS FOR BUILDING THE IMAGE
