@@ -1,0 +1,21 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: lint
+spec:
+  workspaces:
+    - name: source
+  steps:
+    - name: flake8
+      image: python:3.12-slim
+      workingDir: $(workspaces.source.path)
+      script: |
+        pip install flake8
+        flake8 .
+
+    - name: pylint
+      image: python:3.12-slim
+      workingDir: $(workspaces.source.path)
+      script: |
+        pip install pylint
+        pylint service/
