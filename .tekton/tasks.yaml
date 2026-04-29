@@ -19,3 +19,23 @@ spec:
       script: |
         pip install pylint
         pylint service/
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: tests
+spec:
+  workspaces:
+    - name: source
+  steps:
+    - name: pytest
+      image: python:3.12-slim
+      workingDir: $(workspaces.source.path)
+      env:
+        - name: DATABASE_URI
+          value: "sqlite:///test.db"
+        - name: RETRY_COUNT
+          value: "1"
+      script: |
+        pip install pytest pytest-pspec pytest-cov
+        pytest --pspec --cov=service --cov-fail-under=95 --disable-warnings
