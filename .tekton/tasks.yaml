@@ -17,7 +17,8 @@ spec:
       image: python:3.12-slim
       workingDir: $(workspaces.source.path)
       script: |
-        pip install pylint
+        pip install pipenv
+        pipenv install --system --dev
         pylint service/
 ---
 apiVersion: tekton.dev/v1beta1
@@ -37,5 +38,6 @@ spec:
         - name: RETRY_COUNT
           value: "1"
       script: |
-        pip install pytest pytest-pspec pytest-cov
+        pip install pipenv
+        pipenv install --system --dev
         pytest --pspec --cov=service --cov-fail-under=95 --disable-warnings
