@@ -110,7 +110,7 @@ make cluster          # create K3D cluster with load balancer + registry
 make seed-postgres    # pull postgres:15 and push it to cluster-registry
 make build            # build the products image
 make push             # push the products image to cluster-registry
-make deploy           # kubectl apply -R -f k8s/
+make deploy           # kubectl apply -f k8s/ && kubectl apply -f k8s/postgres/
 ```
 
 Once the pods are ready, the service is reachable through the ingress at
