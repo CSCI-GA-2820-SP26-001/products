@@ -1,0 +1,16 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: products
+  labels:
+    app: products
+spec:
+  port:
+    targetPort: http
+  to:
+    kind: Service
+    name: products
+    weight: 100
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
