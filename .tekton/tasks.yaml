@@ -63,3 +63,27 @@ spec:
       script: |
         buildah bud --format=oci -t $(params.IMAGE_NAME) .
         buildah push --tls-verify=false $(params.IMAGE_NAME)
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: bdd
+spec:
+  params:
+    - name: BASE_URL
+      type: string
+      description: The route URL of the deployed products service
+  workspaces:
+    - name: source
+  steps:
+    - name: bdd-tests
+      image: python:3.12-slim
+      workingDir: $(workspaces.source.path)
+      env:
+        - name: BASE_URL
+          value: $(params.BASE_URL)
+      script: |
+        apt-get update && apt-get install -y chromium chromium-driver
+        pip install pipenv
+        pipenv install --system --dev
+        behave
