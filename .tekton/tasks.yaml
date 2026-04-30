@@ -41,3 +41,25 @@ spec:
         pip install pipenv
         pipenv install --system --dev
         pytest --pspec --cov=service --cov-fail-under=95 --disable-warnings
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: build
+spec:
+  params:
+    - name: IMAGE_NAME
+      type: string
+      description: The fully qualified image name
+      default: image-registry.openshift-image-registry.svc:5000/$(context.pipelineRun.namespace)/products:latest
+  workspaces:
+    - name: source
+  steps:
+    - name: build-and-push
+      image: quay.io/buildah/stable
+      workingDir: $(workspaces.source.path)
+      securityContext:
+        privileged: true
+      script: |
+        buildah bud --format=oci -t $(params.IMAGE_NAME) .
+        buildah push --tls-verify=false $(params.IMAGE_NAME)
