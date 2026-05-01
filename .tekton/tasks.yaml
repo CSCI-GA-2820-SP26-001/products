@@ -80,6 +80,6 @@ spec:
       image: bitnami/kubectl:latest
       workingDir: $(workspaces.source.path)
       script: |
-        kubectl apply -f k8s/
+        kubectl apply -R -f k8s/
         kubectl set image deployment/products products=$(params.IMAGE_NAME)
         kubectl rollout status deployment/products
