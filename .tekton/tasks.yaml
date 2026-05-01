@@ -63,3 +63,23 @@ spec:
       script: |
         buildah bud --format=oci -t $(params.IMAGE_NAME) .
         buildah push --tls-verify=false $(params.IMAGE_NAME)
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: deploy
+spec:
+  params:
+    - name: IMAGE_NAME
+      type: string
+      description: The image to deploy
+  workspaces:
+    - name: source
+  steps:
+    - name: deploy
+      image: bitnami/kubectl:latest
+      workingDir: $(workspaces.source.path)
+      script: |
+        kubectl apply -R -f k8s/
+        kubectl set image deployment/products products=$(params.IMAGE_NAME)
+        kubectl rollout status deployment/products
