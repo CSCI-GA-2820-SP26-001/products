@@ -1,0 +1,42 @@
+apiVersion: triggers.tekton.dev/v1beta1
+kind: EventListener
+metadata:
+  name: cd-pipeline-listener
+spec:
+  # On OpenShift, the 'pipeline' ServiceAccount is auto-provisioned by the
+  # OpenShift Pipelines operator in every namespace where Tekton resources
+  # are used, and already has the right cluster-scoped read access for
+  # ClusterInterceptors and ClusterTriggerBindings, plus permission to
+  # create PipelineRuns. Reusing it avoids needing custom Roles or
+  # ClusterRoleBindings that regular users cannot grant on Developer Sandbox.
+  serviceAccountName: pipeline
+  triggers:
+    - name: github-push
+      interceptors:
+        - ref:
+            name: cel
+          params:
+            - name: filter
+              value: "header.match('X-GitHub-Event', 'push') && body.ref == 'refs/heads/master'"
+            - name: overlays
+              value:
+                - key: branch_name
+                  expression: "body.ref.split('/')[2]"
+      bindings:
+        - ref: github-push-binding
+      template:
+        ref: cd-pipeline-template
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: cd-pipeline-listener
+spec:
+  to:
+    kind: Service
+    name: el-cd-pipeline-listener
+  port:
+    targetPort: http-listener
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
