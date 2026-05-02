@@ -1,0 +1,30 @@
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerTemplate
+metadata:
+  name: cd-pipeline-template
+spec:
+  params:
+    - name: repo-url
+      description: The git repository URL to clone
+    - name: branch
+      description: The git branch to check out
+      default: master
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1beta1
+      kind: PipelineRun
+      metadata:
+        generateName: cd-pipeline-run-
+      spec:
+        pipelineRef:
+          name: cd-pipeline
+        params:
+          - name: repo-url
+            value: $(tt.params.repo-url)
+          - name: branch
+            value: $(tt.params.branch)
+          - name: base-url
+            value: http://products:8080
+        workspaces:
+          - name: pipeline-workspace
+            persistentVolumeClaim:
+              claimName: pipeline-workspace
