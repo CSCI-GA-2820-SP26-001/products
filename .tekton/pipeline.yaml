@@ -34,7 +34,8 @@ spec:
           value: $(params.repo-url)
         - name: revision
           value: $(params.branch)
-
+        - name: deleteExisting      
+          value: "true"  
     - name: lint
       runAfter:
         - clone
