@@ -17,9 +17,6 @@ spec:
       type: string
       description: The image to build and deploy
       default: image-registry.openshift-image-registry.svc:5000/$(context.pipelineRun.namespace)/products:latest
-    - name: base-url
-      type: string
-      description: The route URL for BDD tests
 
   tasks:
     - name: clone
@@ -87,6 +84,3 @@ spec:
       workspaces:
         - name: source
           workspace: pipeline-workspace
-      params:
-        - name: BASE_URL
-          value: $(params.base-url)

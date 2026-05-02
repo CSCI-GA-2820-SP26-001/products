@@ -1,0 +1,66 @@
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerBinding
+metadata:
+  name: products-cd-push-binding
+spec:
+  params:
+    - name: git-repo-url
+      value: $(body.repository.clone_url)
+---
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerTemplate
+metadata:
+  name: products-cd-push-template
+spec:
+  params:
+    - name: git-repo-url
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1beta1
+      kind: PipelineRun
+      metadata:
+        generateName: products-cd-run-
+        labels:
+          app.kubernetes.io/name: products
+          app.kubernetes.io/part-of: products
+          app.kubernetes.io/component: cd-pipeline
+      spec:
+        pipelineRef:
+          name: cd-pipeline
+        workspaces:
+          - name: pipeline-workspace
+            persistentVolumeClaim:
+              claimName: pipeline-workspace
+        params:
+          - name: repo-url
+            value: $(tt.params.git-repo-url)
+          - name: branch
+            value: master
+---
+apiVersion: triggers.tekton.dev/v1beta1
+kind: EventListener
+metadata:
+  name: products-github-listener
+spec:
+  serviceAccountName: pipeline
+  triggers:
+    - name: github-push-master
+      interceptors:
+        - ref:
+            name: github
+          params:
+            - name: secretRef
+              value:
+                secretName: github-webhook-secret
+                secretKey: secretToken
+            - name: eventTypes
+              value:
+                - push
+        - ref:
+            name: cel
+          params:
+            - name: filter
+              value: body.ref == 'refs/heads/master'
+      bindings:
+        - ref: products-cd-push-binding
+      template:
+        ref: products-cd-push-template

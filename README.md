@@ -118,6 +118,66 @@ Once the pods are ready, the service is reachable through the ingress at
 
 Tear down with `make cluster-rm`.
 
+## OpenShift CD Webhook
+
+The repository includes Tekton trigger manifests in `.tekton/triggers.yaml`
+to start `cd-pipeline` from a GitHub push webhook. The EventListener accepts
+only `push` events and filters them to `refs/heads/master`, which is what
+causes merges to `master` to trigger a new `PipelineRun`.
+
+Apply the Tekton resources on OpenShift:
+
+```bash
+oc apply -f .tekton/workspace.yaml
+oc apply -f .tekton/tasks.yaml
+oc apply -f .tekton/pipeline.yaml
+oc apply -f .tekton/triggers.yaml
+```
+
+Use `.tekton/github-webhook-secret.example.yaml` as a template, then create the
+real webhook secret before exposing the listener:
+
+```bash
+oc delete secret github-webhook-secret --ignore-not-found
+oc create secret generic github-webhook-secret \
+  --from-literal=secretToken='<shared-secret>'
+```
+
+If the EventListener route does not already exist, expose the generated
+service:
+
+```bash
+oc expose service el-products-github-listener
+oc get route el-products-github-listener
+```
+
+GitHub repository admin access is required to create the webhook. If nobody on
+the team has admin rights, coordinate with the professor on Slack so one team
+member can be promoted long enough to add the webhook.
+
+Configure the GitHub webhook with:
+
+- Payload URL: the `https://` route for `el-products-github-listener`
+- Content type: `application/json`
+- Secret: the same shared secret stored in `github-webhook-secret`
+- Events: `Just the push event`
+
+GitHub cannot restrict a push webhook to a single branch in the webhook UI, so
+the branch restriction is enforced by the EventListener CEL filter
+`body.ref == 'refs/heads/master'`.
+
+To verify the integration after a PR merge to `master`:
+
+```bash
+oc get pipelineruns --sort-by=.metadata.creationTimestamp
+oc describe pipelinerun <new-run-name>
+tkn pipelinerun logs -f <new-run-name>
+```
+
+The BDD task now discovers the `products` OpenShift route automatically, so
+webhook-triggered PipelineRuns no longer need a manually supplied `base-url`
+parameter.
+
 ## API Endpoints
 
 ### Root Endpoint
