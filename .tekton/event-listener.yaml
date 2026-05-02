@@ -1,40 +1,15 @@
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: tekton-triggers-sa
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: tekton-triggers-sa-binding
-subjects:
-  - kind: ServiceAccount
-    name: tekton-triggers-sa
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: tekton-triggers-eventlistener-roles
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: tekton-triggers-sa-clusterbinding
-subjects:
-  - kind: ServiceAccount
-    name: tekton-triggers-sa
-    # Change "default" to your namespace before applying on OpenShift.
-    namespace: default
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: tekton-triggers-eventlistener-clusterroles
----
 apiVersion: triggers.tekton.dev/v1beta1
 kind: EventListener
 metadata:
   name: cd-pipeline-listener
 spec:
-  serviceAccountName: tekton-triggers-sa
+  # On OpenShift, the 'pipeline' ServiceAccount is auto-provisioned by the
+  # OpenShift Pipelines operator in every namespace where Tekton resources
+  # are used, and already has the right cluster-scoped read access for
+  # ClusterInterceptors and ClusterTriggerBindings, plus permission to
+  # create PipelineRuns. Reusing it avoids needing custom Roles or
+  # ClusterRoleBindings that regular users cannot grant on Developer Sandbox.
+  serviceAccountName: pipeline
   triggers:
     - name: github-push
       interceptors:
@@ -62,3 +37,6 @@ spec:
     name: el-cd-pipeline-listener
   port:
     targetPort: http-listener
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
