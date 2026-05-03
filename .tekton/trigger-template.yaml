@@ -1,0 +1,31 @@
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerTemplate
+metadata:
+  name: cd-pipeline-template
+spec:
+  params:
+    - name: repo-url
+      description: The git repository URL to clone
+    - name: branch
+      description: The git branch to check out
+      default: master
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1beta1
+      kind: PipelineRun
+      metadata:
+        generateName: cd-pipeline-run-
+      spec:
+        pipelineRef:
+          name: cd-pipeline
+        # Use 'pipeline' SA so the bdd task can read the products Route
+        # via kubectl (default SA cannot read routes.route.openshift.io).
+        serviceAccountName: pipeline
+        params:
+          - name: repo-url
+            value: $(tt.params.repo-url)
+          - name: branch
+            value: $(tt.params.branch)
+        workspaces:
+          - name: pipeline-workspace
+            persistentVolumeClaim:
+              claimName: pipeline-workspace

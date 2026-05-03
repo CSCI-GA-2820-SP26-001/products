@@ -120,10 +120,16 @@ Tear down with `make cluster-rm`.
 
 ## OpenShift CD Webhook
 
-The repository includes Tekton trigger manifests in `.tekton/triggers.yaml`
-to start `cd-pipeline` from a GitHub push webhook. The EventListener accepts
-only `push` events and filters them to `refs/heads/master`, which is what
-causes merges to `master` to trigger a new `PipelineRun`.
+The repository includes Tekton trigger manifests under `.tekton/` to start
+`cd-pipeline` from a GitHub push webhook:
+
+- `event-listener.yaml` — `EventListener` (`cd-pipeline-listener`) plus its `Route`
+- `trigger-binding.yaml` — `TriggerBinding` extracting fields from the GitHub payload
+- `trigger-template.yaml` — `TriggerTemplate` that creates a `PipelineRun`
+
+The EventListener uses the GitHub interceptor with a shared secret to verify
+webhook signatures, and a CEL filter limits triggers to pushes on
+`refs/heads/master`.
 
 Apply the Tekton resources on OpenShift:
 
@@ -131,11 +137,13 @@ Apply the Tekton resources on OpenShift:
 oc apply -f .tekton/workspace.yaml
 oc apply -f .tekton/tasks.yaml
 oc apply -f .tekton/pipeline.yaml
-oc apply -f .tekton/triggers.yaml
+oc apply -f .tekton/trigger-binding.yaml
+oc apply -f .tekton/trigger-template.yaml
+oc apply -f .tekton/event-listener.yaml
 ```
 
 Use `.tekton/github-webhook-secret.example.yaml` as a template, then create the
-real webhook secret before exposing the listener:
+real webhook secret before configuring the GitHub webhook:
 
 ```bash
 oc delete secret github-webhook-secret --ignore-not-found
@@ -143,12 +151,10 @@ oc create secret generic github-webhook-secret \
   --from-literal=secretToken='<shared-secret>'
 ```
 
-If the EventListener route does not already exist, expose the generated
-service:
+Get the public webhook URL from the Route created by `event-listener.yaml`:
 
 ```bash
-oc expose service el-products-github-listener
-oc get route el-products-github-listener
+oc get route cd-pipeline-listener -o jsonpath='https://{.spec.host}{"\n"}'
 ```
 
 GitHub repository admin access is required to create the webhook. If nobody on
@@ -157,7 +163,7 @@ member can be promoted long enough to add the webhook.
 
 Configure the GitHub webhook with:
 
-- Payload URL: the `https://` route for `el-products-github-listener`
+- Payload URL: the `https://` route for `cd-pipeline-listener`
 - Content type: `application/json`
 - Secret: the same shared secret stored in `github-webhook-secret`
 - Events: `Just the push event`
@@ -174,9 +180,9 @@ oc describe pipelinerun <new-run-name>
 tkn pipelinerun logs -f <new-run-name>
 ```
 
-The BDD task now discovers the `products` OpenShift route automatically, so
-webhook-triggered PipelineRuns no longer need a manually supplied `base-url`
-parameter.
+The BDD task discovers the `products` OpenShift route automatically (running
+under the `pipeline` ServiceAccount), so webhook-triggered PipelineRuns do not
+need a manually supplied `base-url` parameter.
 
 ## API Endpoints
 

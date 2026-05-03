@@ -21,18 +21,24 @@ spec:
   tasks:
     - name: clone
       taskRef:
-        name: git-clone
-        kind: ClusterTask
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: git-clone
+          - name: namespace
+            value: openshift-pipelines
       workspaces:
         - name: output
           workspace: pipeline-workspace
       params:
-        - name: url
+        - name: URL
           value: $(params.repo-url)
-        - name: revision
+        - name: REVISION
           value: $(params.branch)
-        - name: deleteExisting      
-          value: "true"  
+        - name: DELETE_EXISTING
+          value: "true"
     - name: lint
       runAfter:
         - clone
@@ -56,13 +62,22 @@ spec:
         - lint
         - tests
       taskRef:
-        name: build
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: buildah
+          - name: namespace
+            value: openshift-pipelines
       workspaces:
         - name: source
           workspace: pipeline-workspace
       params:
-        - name: IMAGE_NAME
+        - name: IMAGE
           value: $(params.image-name)
+        - name: TLS_VERIFY
+          value: "false"
 
     - name: deploy
       runAfter:
