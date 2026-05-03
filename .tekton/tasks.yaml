@@ -45,28 +45,6 @@ spec:
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: build
-spec:
-  params:
-    - name: IMAGE_NAME
-      type: string
-      description: The fully qualified image name
-      default: image-registry.openshift-image-registry.svc:5000/$(context.pipelineRun.namespace)/products:latest
-  workspaces:
-    - name: source
-  steps:
-    - name: build-and-push
-      image: quay.io/buildah/stable
-      workingDir: $(workspaces.source.path)
-      securityContext:
-        privileged: true
-      script: |
-        buildah bud --format=oci -t $(params.IMAGE_NAME) .
-        buildah push --tls-verify=false $(params.IMAGE_NAME)
----
-apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
   name: deploy
 spec:
   params:
@@ -80,7 +58,7 @@ spec:
       image: bitnami/kubectl:latest
       workingDir: $(workspaces.source.path)
       script: |
-        kubectl apply -R -f k8s/
+        kubectl apply -f k8s/deployment.yaml -f k8s/service.yaml -f k8s/openshift/route.yaml
         kubectl set image deployment/products products=$(params.IMAGE_NAME)
         kubectl rollout status deployment/products
 ---
@@ -89,20 +67,21 @@ kind: Task
 metadata:
   name: bdd
 spec:
-  params:
-    - name: BASE_URL
-      type: string
-      description: The route URL of the deployed products service
   workspaces:
     - name: source
   steps:
+    - name: discover-route
+      image: bitnami/kubectl:latest
+      workingDir: $(workspaces.source.path)
+      script: |
+        HOST="$(kubectl get route products -o jsonpath='{.spec.host}')"
+        test -n "${HOST}"
+        printf 'https://%s' "${HOST}" > .base-url
     - name: bdd-tests
       image: python:3.12-slim
       workingDir: $(workspaces.source.path)
-      env:
-        - name: BASE_URL
-          value: $(params.BASE_URL)
       script: |
+        export BASE_URL="$(cat .base-url)"
         apt-get update && apt-get install -y chromium chromium-driver
         pip install pipenv
         pipenv install --system --dev
