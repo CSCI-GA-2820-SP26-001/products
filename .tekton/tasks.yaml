@@ -67,21 +67,20 @@ kind: Task
 metadata:
   name: bdd
 spec:
+  params:
+    - name: BASE_URL
+      type: string
+      description: The route URL of the deployed microservice
   workspaces:
     - name: source
   steps:
-    - name: discover-route
-      image: bitnami/kubectl:latest
-      workingDir: $(workspaces.source.path)
-      script: |
-        HOST="$(kubectl get route products -o jsonpath='{.spec.host}')"
-        test -n "${HOST}"
-        printf 'https://%s' "${HOST}" > .base-url
     - name: bdd-tests
       image: python:3.12-slim
       workingDir: $(workspaces.source.path)
+      env:
+        - name: BASE_URL
+          value: $(params.BASE_URL)
       script: |
-        export BASE_URL="$(cat .base-url)"
         apt-get update && apt-get install -y chromium chromium-driver
         pip install pipenv
         pipenv install --system --dev
