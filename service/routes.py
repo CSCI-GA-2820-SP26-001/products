@@ -15,10 +15,10 @@
 ######################################################################
 
 """
-YourResourceModel Service
+Product Catalog Service
 
 This service implements a REST API that allows you to Create, Read, Update
-and Delete YourResourceModel
+and Delete Products
 """
 from decimal import Decimal, InvalidOperation
 from flask import jsonify, request, url_for, abort, render_template
